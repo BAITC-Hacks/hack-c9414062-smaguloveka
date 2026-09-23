@@ -158,6 +158,11 @@ def index():
     return FileResponse(ROOT / "web" / "index.html")
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse(ROOT / "app" / "static" / "favicon-32.png", media_type="image/png")
+
+
 @app.get("/m")
 def mobile():
     return FileResponse(ROOT / "web" / "mobile.html")
@@ -373,7 +378,8 @@ async def assistant_ask(request: Request):
     from . import assistant
     b = await request.json()
     try:
-        return await asyncio.to_thread(assistant.ask, b.get("question", ""), b.get("meeting_id"), b.get("history") or [])
+        return await asyncio.to_thread(assistant.ask, b.get("question", ""), b.get("meeting_id"), b.get("history") or [],
+                                       b.get("lang") or "ru")
     except ValueError as e:
         raise HTTPException(400, str(e))
     except Exception as e:

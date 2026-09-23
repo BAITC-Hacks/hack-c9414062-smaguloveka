@@ -20,7 +20,7 @@ SCHEMA = {"type": "object", "properties": {
 SYSTEM = """Ты — ИИ-помощник системы протоколирования совещаний AI Hatshy. Отвечаешь сотруднику на вопросы о его совещаниях, поручениях и договорённостях.
 Правила:
 - Опирайся ТОЛЬКО на данные из контекста. Если ответа там нет — честно скажи, что в протоколах этого нет.
-- Отвечай по-русски, кратко: 1–5 предложений или короткий список. Имена, сроки и цифры — точно как в контексте.
+- Отвечай НА {lang_name} ЯЗЫКЕ (язык интерфейса пользователя), даже если протоколы на другом языке. Кратко: 1–5 предложений или короткий список. Имена, сроки и цифры — точно как в контексте; label в refs — тоже на этом языке.
 - Если вопрос о теме или проекте без названия встречи — найди подходящие совещания по смыслу и назови их.
 - В refs укажи совещания (meeting_id из контекста), на которые опирается ответ; t — таймкод момента записи в формате чч:мм:сс, если он известен из фрагмента, иначе пустая строка; label — 2–5 слов, что там.
 - В тексте ответа НЕ пиши id совещаний — называй встречу по названию и дате; id указывай только в refs.
@@ -82,7 +82,10 @@ def _snippets(question: str, meeting_ids: list[int], limit: int = 12) -> list[st
     return [s for _, s in scored[:limit]]
 
 
-def ask(question: str, meeting_id: int | None = None, history: list | None = None) -> dict:
+LANGS = {"ru": "РУССКОМ", "kk": "КАЗАХСКОМ", "en": "АНГЛИЙСКОМ"}
+
+
+def ask(question: str, meeting_id: int | None = None, history: list | None = None, lang: str = "ru") -> dict:
     question = (question or "").strip()
     if not question:
         raise ValueError("пустой вопрос")
@@ -118,7 +121,8 @@ def ask(question: str, meeting_id: int | None = None, history: list | None = Non
         who = "Пользователь" if h.get("role") == "user" else "Помощник"
         hist += f"{who}: {str(h.get('text', ''))[:600]}\n"
     user = f"КОНТЕКСТ:\n{context}\n\n" + (f"ПРЕДЫДУЩИЙ ДИАЛОГ:\n{hist}\n" if hist else "") + f"ВОПРОС: {question}"
-    msgs = [{"role": "system", "content": SYSTEM.format(today=today)}, {"role": "user", "content": user}]
+    msgs = [{"role": "system", "content": SYSTEM.format(today=today, lang_name=LANGS.get(lang, LANGS["ru"]))},
+            {"role": "user", "content": user}]
     content, _, metrics, _ = extract.call(msgs, SCHEMA, think=False, num_ctx=int(min(32768, max(8192, len(user) // 3 + 2048))))
     try:
         data = json.loads(content)

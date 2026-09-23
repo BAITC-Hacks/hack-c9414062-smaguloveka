@@ -1,12 +1,30 @@
 {
-  "name": "AI Hatshy — секретарь совещаний",
-  "short_name": "AI Hatshy",
-  "start_url": "/m",
-  "scope": "/",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#fbfbfc",
-  "theme_color": "#fbfbfc",
-  "lang": "ru",
-  "icons": [{"src": "/static/mobile/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
+ "name": "AI Hatshy — секретарь совещаний",
+ "short_name": "AI Hatshy",
+ "start_url": "/m",
+ "scope": "/",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#fbfbfc",
+ "theme_color": "#fbfbfc",
+ "lang": "ru",
+ "icons": [
+  {
+   "src": "/static/mobile/icon.svg",
+   "sizes": "any",
+   "type": "image/svg+xml",
+   "purpose": "any"
+  },
+  {
+   "src": "/static/mobile/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "/static/apple-touch-icon.png",
+   "sizes": "180x180",
+   "type": "image/png"
+  }
+ ]
 }

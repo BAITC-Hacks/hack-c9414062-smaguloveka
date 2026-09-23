@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Hatshy — секретарь совещаний</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/static/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<meta name="theme-color" content="#14171b">
 <link rel="stylesheet" href="/static/fonts.css">
 <script src="/static/vendor/react.production.min.js"></script>
 <script src="/static/vendor/react-dom.production.min.js"></script>
@@ -31,6 +35,8 @@ div[data-theme]>aside [data-hide-narrow]{display:none!important}
 div[data-theme]>aside>div:last-child{margin-top:0!important;flex-direction:row!important}
 div[data-theme]>main{padding:16px 14px 40px!important}
 [data-hs=filters]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+[data-hs=settings]{grid-template-columns:1fr!important}
+[data-hs=setnav]{position:static!important;flex-direction:row!important;overflow-x:auto}
 }
 </style>
 </helmet>
@@ -586,9 +592,19 @@ div[data-theme]>main{padding:16px 14px 40px!important}
 
 <sc-if value="{{isSettings}}" hint-placeholder-val="{{false}}">
 <div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap"><div><h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em">{{t.settings}}</h1><div style="color:var(--ink2);margin-top:4px">Развёртывание, модели и защита данных</div></div><button onClick="{{wz.openIt}}" style="height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;cursor:pointer">Мастер настройки</button></div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px">
-    <div style="grid-column:1/-1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+  <div><h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em">{{t.settings}}</h1><div style="color:var(--ink2);margin-top:4px">ИИ, интеграции, приватность и система</div></div>
+  <div data-hs="settings" style="display:grid;grid-template-columns:230px minmax(0,1fr);gap:24px;align-items:start">
+    <nav data-hs="setnav" style="position:sticky;top:16px;display:flex;flex-direction:column;gap:4px">
+      <sc-for list="{{setNav}}" as="n" hint-placeholder-count="5">
+        <button onClick="{{n.onClick}}" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border-radius:10px;border:none;border-left:3px solid {{n.bar}};background:{{n.bg}};color:var(--ink);text-align:left;cursor:pointer;flex-shrink:0" style-hover="background:var(--soft)">
+          <span style="font-size:14px;font-weight:{{n.fw}}">{{n.label}}</span><span style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px">{{n.hint}}</span>
+        </button>
+      </sc-for>
+    </nav>
+    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <sc-if value="{{setIs.ai}}" hint-placeholder-val="{{true}}">
+        <div><div style="font-size:18px;font-weight:600;letter-spacing:-0.01em">ИИ и модели</div><div style="font-size:13px;color:var(--ink2);margin-top:3px;text-wrap:pretty">Какая языковая модель выделяет поручения и пишет сводки, и какие модели распознают речь и разделяют говорящих.</div></div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
         <div><div style="font-weight:500">ИИ для поручений и саммари</div><div style="font-size:12px;color:var(--ink3);margin-top:2px;max-width:720px;text-wrap:pretty">Распознавание речи и диаризация всегда выполняются локально. Здесь выбирается языковая модель, которая по тексту транскрипта выделяет поручения, ответственных, сроки и пишет саммари.</div></div>
         <span style="font-size:12px;padding:3px 9px;border-radius:10px;background:{{llm.badgeBg}};color:{{llm.badgeFg}};font-weight:500;white-space:nowrap">{{llm.badge}}</span>
@@ -624,23 +640,14 @@ div[data-theme]>main{padding:16px 14px 40px!important}
       </div>
     </div>
     <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:500">Контур развёртывания</div><span style="font-size:12px;padding:3px 9px;border-radius:10px;background:var(--okSoft);color:var(--ok);font-weight:500">On-premise</span></div>
-      <sc-for list="{{infra}}" as="r" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--line)"><span style="color:var(--ink2)">{{r.k}}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right">{{r.v}}</span></div></sc-for>
-    </div>
-    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
-      <div style="font-weight:500">Локальные модели</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div style="font-weight:500">Модели распознавания и обработки</div><button onClick="{{wz.openIt}}" style="height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12px;cursor:pointer">Мастер настройки</button></div>
       <sc-for list="{{models}}" as="r" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--line)"><div><div>{{r.k}}</div><div style="font-size:12px;color:var(--ink3)">{{r.d}}</div></div><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right">{{r.v}}</span></div></sc-for>
     </div>
+      </sc-if>
+      <sc-if value="{{setIs.int}}" hint-placeholder-val="{{false}}">
+        <div><div style="font-size:18px;font-weight:600;letter-spacing:-0.01em">Интеграции</div><div style="font-size:13px;color:var(--ink2);margin-top:3px;text-wrap:pretty">Куда отправлять поручения: СЭД, трекеры задач, боты и любые HTTP-сервисы.</div></div>
     <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
-      <div style="font-weight:500">Приватность</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-size:13px">Внешние облачные API</div><div style="font-size:12px;color:var(--ink3)">{{extApi.d}}</div></div><span style="font-size:12px;color:{{extApi.color}}">{{extApi.label}}</span></div>
-      <sc-for list="{{privacy}}" as="r" hint-placeholder-count="1">
-        <div onClick="{{r.onClick}}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer"><div><div style="font-size:13px">{{r.label}}</div><div style="font-size:12px;color:var(--ink3)">{{r.d}}</div></div><span style="width:34px;height:20px;border-radius:10px;background:{{r.bg}};display:flex;justify-content:{{r.jc}};padding:2px;flex-shrink:0"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span></div>
-      </sc-for>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-size:13px">Хранение аудио</div><div style="font-size:12px;color:var(--ink3)">Только на этом сервере, удаляется вместе с совещанием</div></div><span style="font-size:12px;color:var(--ink2);font-family:'IBM Plex Mono',monospace">data/uploads</span></div>
-    </div>
-    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div style="font-weight:500">Интеграции</div><button onClick="{{intg.add}}" style="height:30px;padding:0 12px;border-radius:8px;border:none;background:var(--inv);color:var(--invInk);font-size:12px;font-weight:500;cursor:pointer">+ Добавить</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-weight:500">Подключения</div><div style="font-size:12px;color:var(--ink3);margin-top:2px">Исходящие HTTP-запросы с данными поручений</div></div><button onClick="{{intg.add}}" style="height:30px;padding:0 12px;border-radius:8px;border:none;background:var(--inv);color:var(--invInk);font-size:12px;font-weight:500;cursor:pointer">+ Добавить</button></div>
       <sc-if value="{{intg.none}}" hint-placeholder-val="{{true}}"><div style="font-size:13px;color:var(--ink2);text-wrap:pretty">Подключите любую систему по HTTP-адресу: СЭД, таск-трекер, Bitrix24, Telegram-бота или свой сервис. Поручения можно отправлять из карточки или автоматически после формирования протокола.</div></sc-if>
       <sc-for list="{{intg.items}}" as="r" hint-placeholder-count="2">
         <div style="display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:10px;border:1px solid var(--line)">
@@ -650,11 +657,16 @@ div[data-theme]>main{padding:16px 14px 40px!important}
           <div style="font-size:12px;color:{{r.lastColor}}">{{r.lastText}}</div>
         </div>
       </sc-for>
-      <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px">Встроенные</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div><div style="font-weight:500">Встроенные каналы</div><div style="font-size:12px;color:var(--ink3);margin-top:2px">Работают без настройки</div></div>
       <sc-for list="{{integrations}}" as="r" hint-placeholder-count="2">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--line)"><div><div style="font-size:13px">{{r.k}}</div><div style="font-size:12px;color:var(--ink3)">{{r.d}}</div></div><button onClick="{{r.onClick}}" style="height:28px;padding:0 12px;border-radius:7px;border:1px solid var(--line);background:{{r.bg}};color:{{r.fg}};font-size:12px;cursor:pointer;white-space:nowrap">{{r.btn}}</button></div>
       </sc-for>
     </div>
+      </sc-if>
+      <sc-if value="{{setIs.mcp}}" hint-placeholder-val="{{false}}">
+        <div><div style="font-size:18px;font-weight:600;letter-spacing:-0.01em">MCP для ИИ-агентов</div><div style="font-size:13px;color:var(--ink2);margin-top:3px;text-wrap:pretty">Доступ к совещаниям и поручениям из Claude Code, Claude Desktop и других ИИ-агентов на этом компьютере.</div></div>
     <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div style="font-weight:500">Локальный MCP-сервер</div><span style="font-size:12px;padding:3px 9px;border-radius:10px;background:var(--okSoft);color:var(--ok);font-weight:500">stdio · localhost</span></div>
       <div style="font-size:13px;color:var(--ink2);text-wrap:pretty">Подключает AI Hatshy к ИИ-агентам по протоколу MCP (Claude Code, Claude Desktop и др.): агент может читать совещания и поручения, искать по стенограммам, менять статусы, загружать записи и выгружать протоколы. Работает только с локальным API.</div>
@@ -662,6 +674,31 @@ div[data-theme]>main{padding:16px 14px 40px!important}
       <div style="display:flex;gap:8px;align-items:center"><div style="flex:1;min-width:0;padding:8px 10px;border-radius:8px;background:var(--soft);font-family:'IBM Plex Mono',monospace;font-size:11px;overflow-x:auto;white-space:nowrap">{{mcp.cmd}}</div><button onClick="{{mcp.copy}}" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12px;cursor:pointer;flex-shrink:0">Копировать</button></div>
       <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{mcp.tools}}" as="x" hint-placeholder-count="4"><span style="padding:2px 8px;border-radius:6px;background:var(--soft);color:var(--ink2);font-family:'IBM Plex Mono',monospace;font-size:11px">{{x}}</span></sc-for></div>
       <div style="font-size:12px;color:var(--ink3)">Подробно — docs/MCP.md в репозитории</div>
+    </div>
+      </sc-if>
+      <sc-if value="{{setIs.priv}}" hint-placeholder-val="{{false}}">
+        <div><div style="font-size:18px;font-weight:600;letter-spacing:-0.01em">Приватность и данные</div><div style="font-size:13px;color:var(--ink2);margin-top:3px;text-wrap:pretty">Что остаётся на сервере и что может уйти наружу.</div></div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-weight:500">Приватность</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-size:13px">Внешние облачные API</div><div style="font-size:12px;color:var(--ink3)">{{extApi.d}}</div></div><span style="font-size:12px;color:{{extApi.color}}">{{extApi.label}}</span></div>
+      <sc-for list="{{privacy}}" as="r" hint-placeholder-count="1">
+        <div onClick="{{r.onClick}}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer"><div><div style="font-size:13px">{{r.label}}</div><div style="font-size:12px;color:var(--ink3)">{{r.d}}</div></div><span style="width:34px;height:20px;border-radius:10px;background:{{r.bg}};display:flex;justify-content:{{r.jc}};padding:2px;flex-shrink:0"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span></div>
+      </sc-for>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-size:13px">Хранение аудио</div><div style="font-size:12px;color:var(--ink3)">Только на этом сервере, удаляется вместе с совещанием</div></div><span style="font-size:12px;color:var(--ink2);font-family:'IBM Plex Mono',monospace">data/uploads</span></div>
+    </div>
+      </sc-if>
+      <sc-if value="{{setIs.sys}}" hint-placeholder-val="{{false}}">
+        <div><div style="font-size:18px;font-weight:600;letter-spacing:-0.01em">Система</div><div style="font-size:13px;color:var(--ink2);margin-top:3px;text-wrap:pretty">Где развёрнут сервис, версия, первичная настройка.</div></div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:500">Контур развёртывания</div><span style="font-size:12px;padding:3px 9px;border-radius:10px;background:var(--okSoft);color:var(--ok);font-weight:500">On-premise</span></div>
+      <sc-for list="{{infra}}" as="r" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--line)"><span style="color:var(--ink2)">{{r.k}}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right">{{r.v}}</span></div></sc-for>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-weight:500">Первичная настройка и напоминания</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--line)"><div><div style="font-size:13px">Мастер настройки</div><div style="font-size:12px;color:var(--ink3)">Проверка и скачивание моделей, выбор ИИ</div></div><button onClick="{{wz.openIt}}" style="height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12px;cursor:pointer">Открыть</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-size:13px">Правила напоминаний и демо-дата</div><div style="font-size:12px;color:var(--ink3)">За 3 дня, в день срока, при просрочке, эскалация</div></div><button onClick="{{setGoNotif}}" style="height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12px;cursor:pointer">Уведомления →</button></div>
+    </div>
+      </sc-if>
     </div>
   </div>
 </div>
@@ -1006,14 +1043,14 @@ div[data-theme]>main{padding:16px 14px 40px!important}
 </sc-if>
 
 <sc-if value="{{ai.fab}}" hint-placeholder-val="{{true}}">
-  <button onClick="{{ai.toggle}}" style="position:fixed;right:24px;bottom:24px;z-index:33;height:44px;padding:0 18px;border-radius:22px;border:none;background:var(--inv);color:var(--invInk);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px oklch(0.2 0.01 250 / 0.25)"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></span>Спросить ИИ</button>
+  <button onClick="{{ai.toggle}}" style="position:fixed;right:24px;bottom:24px;z-index:33;height:44px;padding:0 18px;border-radius:22px;border:none;background:var(--inv);color:var(--invInk);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px oklch(0.2 0.01 250 / 0.25)"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></span>{{ai.T.fab}}</button>
 </sc-if>
 <sc-if value="{{ai.open}}" hint-placeholder-val="{{false}}">
   <div style="position:fixed;top:0;right:0;bottom:0;width:440px;max-width:100%;z-index:34;background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;box-shadow:-12px 0 32px oklch(0.2 0.01 250 / 0.12);animation:hin .2s ease">
     <div style="padding:16px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-        <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></span><span style="font-weight:600;font-size:16px">ИИ-помощник</span></div>
-        <div style="display:flex;gap:6px"><button onClick="{{ai.clear}}" title="Новый диалог" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink2);font-size:12px;cursor:pointer">Очистить</button><button onClick="{{ai.toggle}}" style="width:30px;height:30px;border-radius:8px;border:none;background:var(--soft);color:var(--ink);cursor:pointer">✕</button></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></span><span style="font-weight:600;font-size:16px">{{ai.T.title}}</span></div>
+        <div style="display:flex;gap:6px"><button onClick="{{ai.clear}}" title="{{ai.T.clear}}" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink2);font-size:12px;cursor:pointer">{{ai.T.clear}}</button><button onClick="{{ai.toggle}}" style="width:30px;height:30px;border-radius:8px;border:none;background:var(--soft);color:var(--ink);cursor:pointer">✕</button></div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px">
         <span style="padding:4px 10px;border-radius:12px;background:{{ai.ctxBg}};color:{{ai.ctxFg}};max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ai.ctxLabel}}</span>
@@ -1034,10 +1071,10 @@ div[data-theme]>main{padding:16px 14px 40px!important}
           <sc-for list="{{m.refs}}" as="r" hint-placeholder-count="1"><button onClick="{{r.go}}" style="align-self:flex-start;display:flex;flex-direction:column;gap:1px;text-align:left;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;max-width:100%" style-hover="border-color:var(--ink3)"><span style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:360px">↗ {{r.title}}</span><span style="font-size:11px;color:var(--ink3)">{{r.meta}}</span></button></sc-for>
         </div></sc-if>
       </sc-for>
-      <sc-if value="{{ai.busy}}" hint-placeholder-val="{{false}}"><div style="align-self:flex-start;padding:10px 14px;border-radius:14px;background:var(--soft);color:var(--ink3);font-size:13px">Ищу в протоколах…</div></sc-if>
+      <sc-if value="{{ai.busy}}" hint-placeholder-val="{{false}}"><div style="align-self:flex-start;padding:10px 14px;border-radius:14px;background:var(--soft);color:var(--ink3);font-size:13px">{{ai.T.busy}}</div></sc-if>
     </div>
     <div style="padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:flex-end">
-      <textarea value="{{ai.draft}}" onChange="{{ai.onDraft}}" onKeyDown="{{ai.onKey}}" rows="2" placeholder="Спросите о совещаниях, поручениях, проектах…" style="flex:1;min-width:0;resize:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;font-family:inherit;outline:none;line-height:1.4"></textarea>
+      <textarea value="{{ai.draft}}" onChange="{{ai.onDraft}}" onKeyDown="{{ai.onKey}}" rows="2" placeholder="{{ai.T.ph}}" style="flex:1;min-width:0;resize:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;font-family:inherit;outline:none;line-height:1.4"></textarea>
       <button onClick="{{ai.send}}" style="height:42px;padding:0 16px;border-radius:10px;border:none;background:var(--inv);color:var(--invInk);font-weight:500;cursor:pointer;opacity:{{ai.sendOp}}">➤</button>
     </div>
   </div>
@@ -1057,6 +1094,26 @@ const MONTHS_N=['Январь','Февраль','Март','Апрель','Ма�
 const WD=['вс','пн','вт','ср','чт','пт','сб'];
 const MOCK=/[?&]mock=1\b/.test(location.search);
 const STEPS0=['Подготовка аудио','Разделение говорящих','Распознавание речи: RU · KZ · смешанная','Выделение поручений, ответственных и сроков','Формирование сводки и протокола'];
+const AI_T={
+ ru:{fab:'Спросить ИИ',title:'ИИ-помощник',clear:'Очистить',ctxM:t=>`По совещанию: «${t}»`,ctxAll:'По всем совещаниям',toAll:'искать во всех',toMeet:'вернуть контекст встречи',
+  helloM:'Спросите что угодно об этой встрече: кто что обещал, какие цифры звучали, о чём договорились.',
+  helloAll:'Спросите о любых совещаниях: я найду нужную встречу по смыслу, отвечу кратко и дам ссылку на протокол и момент записи.',
+  suggM:['Кратко: о чём была встреча?','Какие решения приняли и кто за что отвечает?','Какие риски и открытые вопросы остались?'],
+  suggAll:['Какие поручения со сроком на этой неделе?','Где обсуждали бюджет и что решили?','Что поручили Гульмире Сериковне?'],
+  ph:'Спросите о совещаниях, поручениях, проектах…',busy:'Ищу в протоколах…',err:'Не получилось ответить: ',none:'Нет ответа'},
+ kk:{fab:'ЖИ-ге сұрақ',title:'ЖИ-көмекші',clear:'Тазалау',ctxM:t=>`Кеңес бойынша: «${t}»`,ctxAll:'Барлық кеңестер бойынша',toAll:'барлығынан іздеу',toMeet:'кеңес контекстіне оралу',
+  helloM:'Осы кеңес туралы кез келген сұрақ қойыңыз: кім не уәде берді, қандай сандар айтылды, не туралы келісті.',
+  helloAll:'Кез келген кеңес туралы сұраңыз: қажетті кеңесті мағынасы бойынша тауып, қысқа жауап беремін және хаттамаға, жазбадағы сәтке сілтеме беремін.',
+  suggM:['Қысқаша: кеңес не туралы болды?','Қандай шешімдер қабылданды және кім неге жауапты?','Қандай тәуекелдер мен ашық сұрақтар қалды?'],
+  suggAll:['Осы аптада мерзімі бар тапсырмалар қандай?','Бюджет қай кеңесте талқыланды және не шешілді?','Гульмира Сериковнаға не тапсырылды?'],
+  ph:'Кеңестер, тапсырмалар, жобалар туралы сұраңыз…',busy:'Хаттамалардан іздеп жатырмын…',err:'Жауап бере алмадым: ',none:'Жауап жоқ'},
+ en:{fab:'Ask AI',title:'AI assistant',clear:'Clear',ctxM:t=>`Meeting: «${t}»`,ctxAll:'All meetings',toAll:'search all meetings',toMeet:'back to this meeting',
+  helloM:'Ask anything about this meeting: who promised what, which numbers came up, what was agreed.',
+  helloAll:'Ask about any meeting: I will find the right one by meaning, answer briefly and link to the minutes and the exact moment in the recording.',
+  suggM:['Briefly: what was the meeting about?','What was decided and who is responsible for what?','What risks and open questions remain?'],
+  suggAll:['Which action items are due this week?','Where was the budget discussed and what was decided?','What was assigned to Gulmira Serikovna?'],
+  ph:'Ask about meetings, action items, projects…',busy:'Searching the minutes…',err:'Could not answer: ',none:'No answer'}
+};
 const I18N={
  ru:{meetings:'Совещания',tasks:'Поручения',myTasks:'Мои поручения',people:'Участники',notif:'Уведомления',settings:'Настройки',newMeeting:'Новое совещание'},
  kk:{meetings:'Кеңестер',tasks:'Тапсырмалар',myTasks:'Менің тапсырмаларым',people:'Қатысушылар',notif:'Хабарламалар',settings:'Баптаулар',newMeeting:'Жаңа кеңес'},
@@ -1112,7 +1169,7 @@ class Component extends DCLogic {
     taskId:null,taskView:'dash',tf:{dir:'all',owner:'all',prio:'all',due:'all',m:'all'},tq:'',toast:null,fmt:'pdf',
     secs:{summary:true,tasks:true,transcript:true,people:true,sign:true},anon:false,q:'',mf:'all',hl:null,
     theme:lsGet('hatshy.theme'),lang:lsGet('hatshy.lang'),role:lsGet('hatshy.role'),
-    data:null,apiErr:null,detail:null,playing:false,acur:0,adur:0,demoDate:'',llmInfo:null,llmForm:null,llmModels:[],llmMsg:null,setup:null,wz:false,wstep:0,dlg:null,repBusy:false,voiceRec:null,voiceLeft:0,voiceBusy:null,vm:null,vmDet:null,vmSel:null,vmCur:0,vmPlaying:false,vmSaving:false,im:null,imRes:null,imBusy:false,sendPick:null,sendBusy:false,aiOpen:false,aiMsgs:[],aiBusy:false,aiDraft:'',aiAll:false};
+    data:null,apiErr:null,detail:null,playing:false,acur:0,adur:0,demoDate:'',llmInfo:null,llmForm:null,llmModels:[],llmMsg:null,setup:null,wz:false,wstep:0,dlg:null,repBusy:false,voiceRec:null,voiceLeft:0,voiceBusy:null,vm:null,vmDet:null,vmSel:null,vmCur:0,vmPlaying:false,vmSaving:false,im:null,imRes:null,imBusy:false,sendPick:null,sendBusy:false,aiOpen:false,aiMsgs:[],aiBusy:false,aiDraft:'',aiAll:false,setTab:lsGet('hatshy.setTab')||'ai'};
   trRef=React.createRef();
   fileRef=React.createRef();
   componentDidMount(){
@@ -1275,9 +1332,10 @@ class Component extends DCLogic {
     q=(q||'').trim();if(!q||this.state.aiBusy)return;
     const mid=this.aiCtx(),hist=this.state.aiMsgs.map(m=>({role:m.role,text:m.text}));
     this.setState(st=>({aiMsgs:[...st.aiMsgs,{role:'user',text:q}],aiDraft:'',aiBusy:true}));
-    try{const r=await api('POST','/api/assistant',{question:q,meeting_id:mid,history:hist});
-      this.setState(st=>({aiMsgs:[...st.aiMsgs,{role:'ai',text:r.answer||'Нет ответа',refs:r.refs||[]}]}));}
-    catch(e){this.setState(st=>({aiMsgs:[...st.aiMsgs,{role:'ai',text:'Не получилось ответить: '+e.message,refs:[],err:true}]}));}
+    const lang=this.state.lang||this.props.lang||'ru',AT=AI_T[lang]||AI_T.ru;
+    try{const r=await api('POST','/api/assistant',{question:q,meeting_id:mid,history:hist,lang});
+      this.setState(st=>({aiMsgs:[...st.aiMsgs,{role:'ai',text:r.answer||AT.none,refs:r.refs||[]}]}));}
+    catch(e){this.setState(st=>({aiMsgs:[...st.aiMsgs,{role:'ai',text:AT.err+e.message,refs:[],err:true}]}));}
     this.setState({aiBusy:false});
   }
   aiGo(r){
@@ -1753,11 +1811,12 @@ class Component extends DCLogic {
       title:INTG.length?'Отправить поручение во внешнюю систему':'Настроить подключение к СЭД, трекеру или боту',op:s.sendBusy?0.6:1,
       go:()=>{if(!INTG.length){this.setState({taskId:null,screen:'settings'});this.openIntegration(null);return;}if(curTask&&pickI)this.sendTask(curTask,pickI);}};
     const aiMid=this.aiCtx(),aiMeet=aiMid&&((D.meetings||[]).find(m=>m.id===aiMid)||{});
-    const ai={fab:!s.aiOpen,open:!!s.aiOpen,toggle:()=>this.setState({aiOpen:!s.aiOpen}),clear:()=>this.setState({aiMsgs:[]}),ref:this.aiRef||(this.aiRef=React.createRef()),
-      ctxLabel:aiMid?`По совещанию: «${(aiMeet&&aiMeet.title)||''}»`:'По всем совещаниям',ctxBg:aiMid?'var(--warnSoft)':'var(--soft)',ctxFg:aiMid?'var(--ink)':'var(--ink2)',
-      canSwitch:s.screen==='protocol'&&!!s.meetingId,switchLabel:s.aiAll?'вернуть контекст встречи':'искать во всех',switchCtx:()=>this.setState({aiAll:!s.aiAll}),
-      empty:s.aiMsgs.length===0,hello:aiMid?'Спросите что угодно об этой встрече: кто что обещал, какие цифры звучали, о чём договорились.':'Спросите о любых совещаниях: я найду нужную встречу по смыслу, отвечу кратко и дам ссылку на протокол и момент записи.',
-      sugg:(aiMid?['Кратко: о чём была встреча?','Какие решения приняли и кто за что отвечает?','Какие риски и открытые вопросы остались?']:['Какие поручения со сроком на этой неделе?','Где обсуждали бюджет и что решили?','Что поручили Гульмире Сериковне?']).map(t=>({t,ask:()=>this.aiAsk(t)})),
+    const AT=AI_T[lang]||AI_T.ru;
+    const ai={T:AT,fab:!s.aiOpen,open:!!s.aiOpen,toggle:()=>this.setState({aiOpen:!s.aiOpen}),clear:()=>this.setState({aiMsgs:[]}),ref:this.aiRef||(this.aiRef=React.createRef()),
+      ctxLabel:aiMid?AT.ctxM((aiMeet&&aiMeet.title)||''):AT.ctxAll,ctxBg:aiMid?'var(--warnSoft)':'var(--soft)',ctxFg:aiMid?'var(--ink)':'var(--ink2)',
+      canSwitch:s.screen==='protocol'&&!!s.meetingId,switchLabel:s.aiAll?AT.toMeet:AT.toAll,switchCtx:()=>this.setState({aiAll:!s.aiAll}),
+      empty:s.aiMsgs.length===0,hello:aiMid?AT.helloM:AT.helloAll,
+      sugg:(aiMid?AT.suggM:AT.suggAll).map(t=>({t,ask:()=>this.aiAsk(t)})),
       msgs:s.aiMsgs.map(m=>({isUser:m.role==='user',isAi:m.role!=='user',text:m.text,color:m.err?'var(--accent)':'var(--ink)',
         refs:(m.refs||[]).map(r=>({title:r.title,meta:[fmtD(parse(r.date)||new Date()),r.t?tcShort(r.t):'',r.label].filter(Boolean).join(' · '),go:()=>this.aiGo(r)}))})),
       busy:s.aiBusy,draft:s.aiDraft,onDraft:e=>this.setState({aiDraft:e.target.value}),
@@ -1765,6 +1824,15 @@ class Component extends DCLogic {
       send:()=>this.aiAsk(s.aiDraft),sendOp:s.aiDraft.trim()&&!s.aiBusy?1:0.4};
     const mcp={cmd:(ST.mcp&&ST.mcp.cmd)||'claude mcp add ai-hatshy -- <путь к проекту>/scripts/mcp.sh',tools:(ST.mcp&&ST.mcp.tools)||[],
       copy:()=>{try{navigator.clipboard.writeText((ST.mcp&&ST.mcp.cmd)||'');this.toast('Команда скопирована');}catch(e){this.toast('Скопируйте команду вручную');}}};
+    const STAB=['ai','int','mcp','priv','sys'].includes(s.setTab)?s.setTab:'ai';
+    const LLMs=ST.llm||{},nInt=(ST.integrations||[]).length;
+    const setNav=[['ai','ИИ и модели',LLMs.provider==='openai'?`${LLMs.openai_model||'OpenAI'} · внешний API`:`${LLMs.ollama_model||'Ollama'} · локально`],
+      ['int','Интеграции',nInt?`${nInt} ${pl(nInt,['подключение','подключения','подключений'])}`:'нет подключений'],
+      ['mcp','MCP для ИИ-агентов','stdio · только localhost'],
+      ['priv','Приватность',LLMs.provider==='openai'?'внешние API: только текст':'всё обрабатывается локально'],
+      ['sys','Система','On-premise · версия 0.1.0']].map(([k,label,hint])=>({label,hint,bg:STAB===k?'var(--soft)':'transparent',bar:STAB===k?'var(--ink)':'transparent',fw:STAB===k?600:500,
+        onClick:()=>{lsSet('hatshy.setTab',k);this.setState({setTab:k});}}));
+    const setIs={ai:STAB==='ai',int:STAB==='int',mcp:STAB==='mcp',priv:STAB==='priv',sys:STAB==='sys'};
     const D0=s.dlg;
     const dlgV={open:!!D0,title:D0?D0.title:'',text:D0?D0.text||'':'',hasInput:!!(D0&&D0.hasInput),value:D0?D0.value:'',okLabel:D0?D0.okLabel||'OK':'',
       okBg:D0&&D0.danger?'var(--accent)':'var(--inv)',okFg:D0&&D0.danger?'#fff':'var(--invInk)',
@@ -1846,7 +1914,7 @@ class Component extends DCLogic {
       remindNow:()=>{if(task)this.remind(task);},sendSed:()=>this.toast('СЭД: интеграция в разработке'),
       people,voiceLeft:s.voiceLeft,noPeople:people.length===0,
       notifs,noNotifs:notifs.length===0,rules,channels,markRead:()=>this.markRead(),dateType:'date',demoDate:s.demoDate,onDemoDate:e=>this.setState({demoDate:e.target.value}),runDemo:()=>this.runDemo(),
-      infra:ST.infra||[],models:ST.models||[],privacy,integrations,llm:llmV,llmTabs,extApi,wz:wzV,dlg:dlgV,vm:vmV,intg,im,sendTo,ai,mcp,
+      infra:ST.infra||[],models:ST.models||[],privacy,integrations,llm:llmV,llmTabs,extApi,wz:wzV,dlg:dlgV,vm:vmV,intg,im,sendTo,ai,mcp,setNav,setIs,setGoNotif:()=>this.go('notif'),
       isNew:s.modal==='new',newTabs,tabConf:s.newTab==='conf',tabMic:s.newTab==='mic',tabFile:s.newTab==='file',tabRec:s.newTab!=='file',
       mtitle:s.mtitle,onTitle:e=>this.setState({mtitle:e.target.value}),titlePh:s.newTab==='conf'?'Например: Онлайн-планёрка по бюджету':s.newTab==='mic'?'Например: Штаб по отопительному сезону':'По умолчанию — имя файла',
       mpart:s.mpart,onPart:e=>this.setState({mpart:e.target.value}),
