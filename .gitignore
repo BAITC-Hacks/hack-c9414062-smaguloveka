@@ -1,0 +1,15 @@
+.DS_Store
+node_modules/
+.next/
+out/
+target/
+.hatshy/
+.env
+.env.*
+!.env.example
+*.log
+.venv/
+__pycache__/
+*.pyc
+test-results/
+playwright-report/

@@ -1,0 +1,35 @@
+[package]
+name = "hatshy-server"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[features]
+default = []
+metal = ["whisper-rs/metal"]
+cuda = ["whisper-rs/cuda"]
+
+[dependencies]
+tower = { version = "0.5", features = ["util"] }
+axum = { version = "0.8.9", features = ["multipart"] }
+tokio = { version = "1.52.3", features = ["full"] }
+tower-http = { version = "0.6.10", features = ["fs", "limit"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio"] }
+reqwest = { version = "0.11.27", default-features = false, features = ["json", "stream", "rustls-tls", "multipart"] }
+uuid = { version = "1.23.1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+futures-util = "0.3"
+sha2 = "0.10"
+hex = "0.4"
+ring = "0.17"
+base64 = "0.22"
+whisper-rs = "0.13.2"
+hound = "3.5"
+printpdf = { version = "0.7", default-features = false }
+zip = { version = "2.4", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+tempfile = "3.27"
+tower = { version = "0.5", features = ["util"] }
