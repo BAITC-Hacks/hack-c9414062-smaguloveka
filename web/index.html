@@ -1018,6 +1018,10 @@ class Component extends DCLogic {
     catch(e){this.toast('Не удалось загрузить протокол: '+e.message);}
   }
   openMeeting(m){
+    if(m.status==='recording'||(m.status==='processing'&&m.step_label==='Идёт запись')){
+      if(this.state.live&&this.state.liveId===m.id)this.setState({screen:'live'});
+      else this.toast('Идёт запись в другой вкладке или на другом устройстве. Протокол появится после «Завершить».');
+      return;}
     if(['processing','queued','error'].includes(m.status))this.startProc(m.id,m.title,m);
     else this.openProtocol(m.id);
   }
@@ -1283,7 +1287,8 @@ class Component extends DCLogic {
     const q=s.q.trim().toLowerCase();
     const allM=D.meetings||[];
     const meetings=allM.filter(m=>(s.mf==='all'||(s.mf==='tasks'&&m.tasks_count>0)||(s.mf==='review'&&(m.status==='review'||m.unconfirmed>0)))&&(!q||String(m.title||'').toLowerCase().includes(q)||(m.people||[]).some(p=>String(p.name||'').toLowerCase().includes(q)))).map(m=>{
-      const SM={done:['Обработано','var(--okSoft)','var(--ok)'],review:['На проверке','var(--warnSoft)','var(--warn)'],processing:[`Обработка ${Math.round(m.pct||0)}%`,'var(--soft)','var(--ink2)'],queued:['В очереди','var(--soft)','var(--ink2)'],error:['Ошибка','var(--accentSoft)','var(--accent)']}[m.status]||[m.status||'—','var(--soft)','var(--ink2)'];
+      const isRec=m.status==='recording'||(m.status==='processing'&&m.step_label==='Идёт запись');
+      const SM=isRec?['● Идёт запись','var(--accentSoft)','var(--accent)']:{done:['Обработано','var(--okSoft)','var(--ok)'],review:['На проверке','var(--warnSoft)','var(--warn)'],processing:[`Обработка ${Math.round(m.pct||0)}%`,'var(--soft)','var(--ink2)'],queued:['В очереди','var(--soft)','var(--ink2)'],error:['Ошибка','var(--accentSoft)','var(--accent)']}[m.status]||[m.status||'—','var(--soft)','var(--ink2)'];
       const ppl=m.people||[],md=parse(m.date);
       return {title:m.title||'Без названия',source:m.source_label||'',date:m.date_label||(md?fmtD(md):'—'),dur:m.dur_label||(m.duration_s?secToStr(m.duration_s):'—'),langs:m.langs||'—',tasks:m.tasks_count||'—',
         status:SM[0],sBg:SM[1],sFg:SM[2],err:m.error||'',av:ppl.slice(0,4).map(p=>({ini:p.ini||'?',color:col(p.hue),name:p.name})),hasMore:ppl.length>4,more:ppl.length-4,noPeople:ppl.length===0,

@@ -39,12 +39,35 @@ def _worker():
             db.update("meetings", mid, status="error", error=f"{type(e).__name__}: {e}")
 
 
+def _live_watchdog():
+    """Вкладку с записью закрыли без «Завершить»: если кусков нет 90 с — запись уходит в обработку (пустая — ошибка)."""
+    import os
+    while True:
+        time.sleep(20)
+        try:
+            for m in db.q("SELECT id, audio_path FROM meetings WHERE status='processing' AND step_label='Идёт запись'"):
+                p = m["audio_path"]
+                if not p or not os.path.exists(p):
+                    continue
+                if time.time() - os.path.getmtime(p) < 90:
+                    continue
+                if os.path.getsize(p) > 20000:
+                    live_stop(m["id"])
+                else:
+                    db.update("meetings", m["id"], status="error", error="Запись прервана: аудио не получено")
+        except Exception:
+            traceback.print_exc()
+
+
 def start_worker():
     threading.Thread(target=_worker, daemon=True).start()
+    threading.Thread(target=_live_watchdog, daemon=True).start()
     # незавершённые после рестарта — снова в очередь; прерванные live-записи без аудио — ошибка
     import os
-    for m in db.q("SELECT id, audio_path, source FROM meetings WHERE status IN ('queued','processing')"):
+    for m in db.q("SELECT id, audio_path, source, step_label FROM meetings WHERE status IN ('queued','processing')"):
         p = m["audio_path"]
+        if m["step_label"] == "Идёт запись":
+            continue  # идущая live-запись: ею займётся сторож (_live_watchdog)
         if not p or not os.path.exists(p) or os.path.getsize(p) < 2000:
             db.update("meetings", m["id"], status="error", error="Запись прервана: аудио не получено")
         else:
