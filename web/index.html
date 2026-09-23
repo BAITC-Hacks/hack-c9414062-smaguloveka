@@ -27,7 +27,8 @@ div[data-theme]{flex-direction:column}
 div[data-theme]>aside{width:auto!important;height:auto!important;position:sticky!important;top:0;z-index:15;flex-direction:row!important;flex-wrap:wrap;align-items:center;gap:10px!important;padding:10px 12px!important;border-right:none!important;border-bottom:1px solid var(--line)}
 div[data-theme]>aside>nav{flex-direction:row!important;flex-wrap:wrap}
 div[data-theme]>aside>nav>button{height:32px!important}
-div[data-theme]>aside>div:last-child{display:none!important}
+div[data-theme]>aside [data-hide-narrow]{display:none!important}
+div[data-theme]>aside>div:last-child{margin-top:0!important;flex-direction:row!important}
 div[data-theme]>main{padding:16px 14px 40px!important}
 }
 </style>
@@ -58,27 +59,31 @@ div[data-theme]>main{padding:16px 14px 40px!important}
     </button>
   </sc-if>
   <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px;flex-shrink:0">
-    <div style="padding:10px 12px;border-radius:9px;background:var(--soft);font-size:12px;color:var(--ink2);display:flex;flex-direction:column;gap:2px">
+    <div data-hide-narrow="1" style="padding:10px 12px;border-radius:9px;background:var(--soft);font-size:12px;color:var(--ink2);display:flex;flex-direction:column;gap:2px">
       <div style="display:flex;align-items:center;gap:6px;color:var(--ink);font-weight:500"><span style="width:6px;height:6px;border-radius:50%;background:{{contourDot}}"></span>Закрытый контур</div>
       <div>{{contourText}}</div>
     </div>
-    <div style="display:flex;gap:8px">
-      <div style="flex:1;display:flex;padding:3px;border-radius:8px;background:var(--soft);gap:2px">
-        <sc-for list="{{langs}}" as="l" hint-placeholder-count="3">
-          <button onClick="{{l.onClick}}" style="flex:1;height:26px;border:none;border-radius:6px;background:{{l.bg}};color:{{l.fg}};font-size:12px;font-weight:500;cursor:pointer">{{l.label}}</button>
-        </sc-for>
-      </div>
-      <button onClick="{{toggleTheme}}" title="Тема" style="width:32px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center"><span style="width:12px;height:12px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
-    </div>
-    <button onClick="{{cycleRole}}" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:9px;border:none;background:transparent;color:var(--ink);cursor:pointer;text-align:left" style-hover="background:var(--soft)">
+    <button onClick="{{settingsNav.onClick}}" style="flex-shrink:0;display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:8px;border:none;background:{{settingsNav.bg}};color:{{settingsNav.fg}};font-size:14px;font-weight:{{settingsNav.fw}};cursor:pointer;text-align:left" style-hover="background:var(--soft)">
+      <span>{{settingsNav.label}}</span>
+    </button>
+    <button data-hide-narrow="1" onClick="{{cycleRole}}" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:9px;border:none;background:transparent;color:var(--ink);cursor:pointer;text-align:left" style-hover="background:var(--soft)">
       <span style="width:32px;height:32px;border-radius:50%;background:{{me.color}};color:#fff;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{me.ini}}</span>
       <span style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:500;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{me.name}}</span><span style="font-size:12px;color:var(--ink2)">{{roleLabel}} · сменить</span></span>
     </button>
-    <a href="/m" style="font-size:12px;color:var(--ink2);padding:0 8px">Мобильная версия →</a>
+    <a data-hide-narrow="1" href="/m" style="font-size:12px;color:var(--ink2);padding:0 8px">Мобильная версия →</a>
   </div>
 </aside>
 
 <main style="flex:1;min-width:0;padding:28px 36px 60px">
+<div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:-12px 0 12px">
+  <div style="display:flex;padding:3px;border-radius:8px;background:var(--soft);gap:2px">
+    <sc-for list="{{langs}}" as="l" hint-placeholder-count="3">
+      <button onClick="{{l.onClick}}" style="min-width:38px;height:26px;padding:0 8px;border:none;border-radius:6px;background:{{l.bg}};color:{{l.fg}};font-size:12px;font-weight:500;cursor:pointer">{{l.label}}</button>
+    </sc-for>
+  </div>
+  <button onClick="{{toggleTheme}}" title="Светлая / тёмная тема" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center"><span style="width:12px;height:12px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+</div>
+
 
 <sc-if value="{{hasApiErr}}" hint-placeholder-val="{{false}}">
   <div style="max-width:1200px;margin:0 auto 16px;padding:10px 14px;border-radius:10px;background:var(--accentSoft);color:var(--accent);font-size:13px">Сервер недоступен: {{apiErr}}. Повторная попытка через 5 с.</div>
@@ -1268,7 +1273,8 @@ class Component extends DCLogic {
     const overdueAll=scoped.filter(x=>x.key==='overdue').length;
     const unread=(D.notifications||[]).filter(n=>!n.read).length;
     const navScreen=['live','processing','protocol'].includes(s.screen)?'meetings':s.screen;
-    const nav=[['meetings',t.meetings],['tasks',role==='executor'?t.myTasks:t.tasks,overdueAll],['people',t.people],['notif',t.notif,unread],['settings',t.settings]].map(([k,label,badge])=>{const a=navScreen===k;return {label,bg:a?'var(--soft)':'transparent',fg:a?'var(--ink)':'var(--ink2)',fw:a?500:400,hasBadge:!!badge,badge,badgeBg:k==='tasks'?'var(--accent)':'var(--inv)',badgeFg:k==='tasks'?'#fff':'var(--invInk)',onClick:()=>this.go(k)};});
+    const settingsNav={label:t.settings,bg:navScreen==='settings'?'var(--soft)':'transparent',fg:navScreen==='settings'?'var(--ink)':'var(--ink2)',fw:navScreen==='settings'?500:400,onClick:()=>this.go('settings')};
+    const nav=[['meetings',t.meetings],['tasks',role==='executor'?t.myTasks:t.tasks,overdueAll],['people',t.people],['notif',t.notif,unread]].map(([k,label,badge])=>{const a=navScreen===k;return {label,bg:a?'var(--soft)':'transparent',fg:a?'var(--ink)':'var(--ink2)',fw:a?500:400,hasBadge:!!badge,badge,badgeBg:k==='tasks'?'var(--accent)':'var(--inv)',badgeFg:k==='tasks'?'#fff':'var(--invInk)',onClick:()=>this.go(k)};});
     const langs=[['ru','RU'],['kk','KZ'],['en','EN']].map(([k,label])=>({label,bg:lang===k?'var(--surface)':'transparent',fg:lang===k?'var(--ink)':'var(--ink3)',onClick:()=>{lsSet('hatshy.lang',k);this.setState({lang:k});}}));
     const pulseDot=React.createElement('span',{style:{width:10,height:10,borderRadius:'50%',background:'var(--accent)',flexShrink:0,animation:s.paused?'none':'hpulse 1.4s infinite',display:'inline-block'}});
     const wave=React.createElement('div',{style:{display:'flex',alignItems:'center',gap:3,height:32}},Array.from({length:18},(_,i)=>React.createElement('span',{key:i,style:{width:3,height:32,borderRadius:2,background:'var(--accent)',opacity:0.8,transformOrigin:'center',transform:'scaleY(.25)',animation:s.paused?'none':`hwave ${0.7+(i*37%9)/10}s ${(i*13%7)/10}s infinite ease-in-out`}})));
@@ -1443,7 +1449,7 @@ class Component extends DCLogic {
       summary:s.secs.summary,tasks:s.secs.tasks,transcript:s.secs.transcript,people:s.secs.people,sign:s.secs.sign,
       rows:mtasks.slice(0,3).map((k,i)=>({n:i+1,title:k.title,owner:s.anon?anonName(k.owner):k.ownerShort,due:k.dueDate?`${pad(k.dueDate.getDate())}.${pad(k.dueDate.getMonth()+1)}`:'—'}))};
     return {
-      theme,t,nav,langs,me,roleLabel:ROLE_LABEL[role]||'Секретарь',canRecord:role!=='executor',
+      theme,t,nav,settingsNav,langs,me,roleLabel:ROLE_LABEL[role]||'Секретарь',canRecord:role!=='executor',
       contourDot:s.apiErr?'var(--accent)':'var(--ok)',contourText:MOCK?'Демо-данные (mock) · без сервера':s.apiErr?'Нет связи с локальным сервером':'Аудио и текст не покидают сервер',
       hasApiErr:!!s.apiErr&&!MOCK,apiErr:s.apiErr,
       toggleTheme:()=>{const v=theme==='dark'?'light':'dark';lsSet('hatshy.theme',v);this.setState({theme:v});},
