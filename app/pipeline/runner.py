@@ -176,6 +176,13 @@ def process(mid: int):
             traceback.print_exc()
         left = db.one("SELECT COUNT(*) n FROM tasks WHERE meeting_id=?", (mid,))["n"]
         db.update("meetings", mid, status="review" if left else "done", step=5, pct=100, step_label="Готово")
+    try:  # автоматическая рассылка выдержек ответственным (правило «extracts»)
+        from .. import reminders as _rm
+        if {**_rm.DEFAULT_RULES, **(db.kv_get("rules", {}) or {})}.get("extracts") and \
+                db.one("SELECT COUNT(*) n FROM tasks WHERE meeting_id=?", (mid,))["n"]:
+            _rm.send_extracts(mid)
+    except Exception:
+        traceback.print_exc()
     try:  # автоотправка поручений в интеграции с включённой опцией
         from .. import integrations
         integrations.auto_send_meeting(mid)

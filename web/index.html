@@ -12,6 +12,7 @@
 <script src="/static/vendor/react.production.min.js"></script>
 <script src="/static/vendor/react-dom.production.min.js"></script>
 <script src="/static/support.js"></script>
+<script src="/static/i18n.js"></script>
 </head>
 <body>
 <x-dc>
@@ -1177,12 +1178,14 @@ class Component extends DCLogic {
     this.iv=setInterval(()=>this.tick(),1000);
     this.sv=setInterval(()=>this.refresh(),5000);
     this.loadSetup(true);
+    setTimeout(()=>{if(window.__hsSetLang)window.__hsSetLang(this._lang);},0);
     this.su=setInterval(()=>{if(this.state.wz)this.loadSetup(false);},1500);
     this.onKey=e=>{if(e.key==='Escape'){if(this.state.dlg)this.setState({dlg:null});else if(this.state.im)this.setState({im:null});else if(this.state.vm)this.closeVm();else if(this.state.taskId!=null)this.setState({taskId:null});else if(this.state.modal&&!this.state.uploading)this.setState({modal:null});}};
     window.addEventListener('keydown',this.onKey);
   }
   componentWillUnmount(){clearInterval(this.iv);clearInterval(this.sv);clearInterval(this.su);clearInterval(this.pp);clearTimeout(this.tt);window.removeEventListener('keydown',this.onKey);if(this.audio)this.audio.pause();}
   componentDidUpdate(){
+    if(window.__hsSetLang)window.__hsSetLang(this._lang);
     const s=this.state;
     if(this.lastAi!==s.aiMsgs.length+(s.aiBusy?1:0)){this.lastAi=s.aiMsgs.length+(s.aiBusy?1:0);const el=this.aiRef&&this.aiRef.current;if(el)el.scrollTop=el.scrollHeight;}
     if(this.lastSegs!==s.liveSegs){this.lastSegs=s.liveSegs;if(this.trRef.current){const el=this.trRef.current;el.scrollTop=el.scrollHeight;}}
@@ -1618,6 +1621,7 @@ class Component extends DCLogic {
   }
   renderVals(){
     const s=this.state,theme=s.theme||this.props.theme||'light',lang=s.lang||this.props.lang||'ru',role=s.role||this.props.role||'secretary';
+    this._lang=lang;
     const t=I18N[lang]||I18N.ru,D=s.data||EMPTY,ST=D.settings||EMPTY.settings;
     const TODAY=parse(D.today)||(()=>{const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate());})();
     const tasks=(D.tasks||[]).map(x=>this.decorate(x,TODAY));
@@ -1738,7 +1742,7 @@ class Component extends DCLogic {
     const notifs=(D.notifications||[]).map(n=>({title:n.title,text:n.text,channel:n.channel,time:n.time,dot:n.type==='over'?'var(--accent)':(n.type==='soon'||n.type==='today')?'var(--warn)':'var(--ink3)',fw:n.read?400:500,
       onClick:()=>{if(n.task_id!=null&&tasks.some(x=>x.id===n.task_id))this.setState({taskId:n.task_id});else if(n.meeting_id!=null)this.openProtocol(n.meeting_id);}}));
     const R=ST.rules||{},C=ST.channels||{};
-    const rules=[['d3','За 3 дня до срока'],['d0','В день срока'],['daily','Ежедневно при просрочке'],['esc','Эскалация поручившему через 2 дня просрочки']].map(([k,label])=>({label,...tog(!!R[k]),onClick:()=>this.saveSettings({rules:{...R,[k]:!R[k]}})}));
+    const rules=[['d3','За 3 дня до срока'],['d0','В день срока'],['daily','Ежедневно при просрочке'],['esc','Эскалация поручившему через 2 дня просрочки'],['extracts','Выдержки ответственным сразу после протокола']].map(([k,label])=>({label,...tog(!!R[k]),onClick:()=>this.saveSettings({rules:{...R,[k]:!R[k]}})}));
     const channels=[['inapp','В приложении'],['email','Email · локальный outbox'],['sed','Задача в СЭД · в разработке']].map(([k,label])=>({label,...tog(!!C[k]),onClick:()=>{if(k==='sed'){this.toast('СЭД: интеграция в разработке');return;}this.saveSettings({channels:{...C,[k]:!C[k]}});}}));
     const PV=ST.privacy||{};
     const privacy=[['anon','Анонимизация ФИО в экспорте по умолчанию','Замена ФИО на «Участник N» в PDF и DOCX']].map(([k,label,d])=>({label,d,...tog(!!PV[k]),onClick:()=>this.saveSettings({privacy:{...PV,[k]:!PV[k]}},!PV[k]?'Анонимизация включена':'Анонимизация выключена')}));

@@ -6,7 +6,7 @@ from email.message import EmailMessage
 from . import db
 from .config import OUTBOX
 
-DEFAULT_RULES = {"d3": True, "d0": True, "daily": True, "esc": False}
+DEFAULT_RULES = {"d3": True, "d0": True, "daily": True, "esc": True, "extracts": True}
 DEFAULT_CHANNELS = {"inapp": True, "email": True, "sed": False}
 MONTHS_G = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
 
@@ -60,15 +60,17 @@ def run(on: dt.date | None = None) -> int:
         days = (due - d0).days
         who = t["owner"]
         base = f"{who} · {t['title']}"
+        cur = (t["issued_by"] or "").strip()
+        rcpt = who if not cur or cur == who else f"{who}, {cur} (куратор)"  # исполнитель и куратор поручения
         if rules["d3"] and 0 < days <= 3:
-            n += bool(notify("soon", f"Срок через {days} дн.: {t['title']}", f"{who} · до {human(due)}",
-                             f"soon:{t['id']}:{t['due']}", t["id"], t["meeting_id"], who))
+            n += bool(notify("soon", f"Срок через {days} дн.: {t['title']}", f"{who} · до {human(due)}" + (f" · куратор: {cur}" if cur and cur != who else ""),
+                             f"soon:{t['id']}:{t['due']}", t["id"], t["meeting_id"], rcpt))
         if rules["d0"] and days == 0:
             n += bool(notify("today", f"Срок сегодня: {t['title']}", f"{who} · до {human(due)}",
-                             f"today:{t['id']}:{t['due']}", t["id"], t["meeting_id"], who))
+                             f"today:{t['id']}:{t['due']}", t["id"], t["meeting_id"], rcpt))
         if rules["daily"] and days < 0:
-            n += bool(notify("over", f"Просрочено: {t['title']}", f"{who} · срок был {human(due)}",
-                             f"over:{t['id']}:{d0.isoformat()}", t["id"], t["meeting_id"], who))
+            n += bool(notify("over", f"Просрочено: {t['title']}", f"{who} · срок был {human(due)}" + (f" · куратор: {cur}" if cur and cur != who else ""),
+                             f"over:{t['id']}:{d0.isoformat()}", t["id"], t["meeting_id"], rcpt))
         if rules["esc"] and days <= -2:
             n += bool(notify("over", f"Эскалация куратору: {t['title']}",
                              f"{base} · просрочено на {-days} дн. Куратор: {t['issued_by'] or '—'}",
