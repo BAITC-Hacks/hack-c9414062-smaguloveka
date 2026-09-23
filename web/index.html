@@ -1157,6 +1157,7 @@ class Component extends DCLogic {
   }
   // --- новое совещание ---
   openNew(){
+    if(this.rec&&this.rec.state!=='inactive'){this.setState({screen:'live'});this.toast('Идёт запись «'+(this.state.liveTitle||'')+'». Завершите её, чтобы начать новую.');return;}
     this.setState({modal:'new',upload:0,uploading:false,file:null,mtitle:'',mpart:'',dragOver:false});
     this.loadDevices(false);
   }
@@ -1176,6 +1177,7 @@ class Component extends DCLogic {
   }
   async startRec(source){
     const s=this.state;
+    if(this.rec&&this.rec.state!=='inactive'){this.setState({modal:null,screen:'live'});this.toast('Сначала завершите текущую запись «'+(s.liveTitle||'')+'»');return;}
     if(!navigator.mediaDevices||!window.MediaRecorder){this.toast('Браузер не поддерживает запись звука');return;}
     const title=s.mtitle.trim()||(source==='conf'?'Онлайн-совещание':'Совещание в зале');
     let stream;
@@ -1188,15 +1190,20 @@ class Component extends DCLogic {
     let mime='';for(const m of ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus']){if(MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m)){mime=m;break;}}
     const rec=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
     this.rec=rec;this.stream=stream;this.chain=Promise.resolve();
-    rec.ondataavailable=e=>{if(!e.data||!e.data.size)return;const blob=e.data;this.chain=this.chain.then(()=>this.sendChunk(id,blob));};
+    rec.ondataavailable=e=>{if(!e.data||!e.data.size)return;const blob=e.data;this.chain=this.chain.then(()=>this.sendChunk(id,blob,rec,stream));};
     rec.start(4000);
     const dev=s.devices.find(d=>d.id===s.deviceId);
     this.setState({modal:null,screen:'live',live:true,paused:false,sec:0,liveId:id,liveTitle:title,liveSource:source,liveDevice:dev?dev.label:'устройство по умолчанию',liveSegs:[],liveErr:null,liveSent:0,liveNotify:s.notify,stopping:false,taskId:null});
     if(s.notify)this.toast('Участники уведомлены о записи');
   }
-  async sendChunk(id,blob){
+  async sendChunk(id,blob,rec,stream){
     const fd=new FormData();fd.append('chunk',blob,'chunk.webm');
     try{const r=await api('POST',`/api/live/${id}/chunk`,fd);const segs=(r&&r.segments)||[];
+      if(r&&r.stop){  // сервер считает запись завершённой — останавливаем этот рекордер и освобождаем микрофон
+        try{if(rec&&rec.state!=='inactive'){rec.ondataavailable=null;rec.stop();}}catch(e){}
+        try{if(stream)stream.getTracks().forEach(t=>t.stop());}catch(e){}
+        if(this.rec===rec){this.rec=null;this.stream=null;this.setState({live:false,paused:false,stopping:false,screen:this.state.screen==='live'?'meetings':this.state.screen});this.toast('Запись остановлена сервером');}
+        return;}
       this.setState(st=>({liveSent:st.liveSent+blob.size,liveErr:null,liveSegs:segs.length?[...st.liveSegs,...segs]:st.liveSegs}));}
     catch(e){this.setState({liveErr:e.message});}
   }

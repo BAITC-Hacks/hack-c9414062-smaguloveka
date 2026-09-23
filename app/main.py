@@ -489,7 +489,9 @@ async def live_start(request: Request):
 
 @app.post("/api/live/{mid}/chunk")
 async def live_chunk(mid: int, chunk: UploadFile = File(...)):
-    m = _meeting_or_404(mid)
+    m = db.one("SELECT * FROM meetings WHERE id=?", (mid,))
+    if not m or m["status"] != "processing" or m["step_label"] != "Идёт запись":
+        return {"segments": [], "stop": True}  # запись уже завершена/удалена — клиент должен остановить рекордер
     with open(m["audio_path"], "ab") as f:
         f.write(await chunk.read())
     segs = await asyncio.to_thread(runner.live_chunk, mid, m["audio_path"])

@@ -211,11 +211,14 @@ _live: dict[int, dict] = {}
 
 
 def live_chunk(mid: int, path: str) -> list[dict]:
+    fresh = mid not in _live
     st = _live.setdefault(mid, {"pos": 0.0})
     try:
         audio = load_16k(path)
     except Exception:
         return []
+    if fresh and len(audio) > 10 * SR:  # сервер перезапускался посреди записи — продолжаем с текущего места
+        st["pos"] = len(audio) / SR - 6
     new = audio[int(st["pos"] * SR):]
     if len(new) < int(1.5 * SR):
         return []
