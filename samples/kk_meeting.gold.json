@@ -1,0 +1,107 @@
+{
+ "meetings": [
+  {
+   "number": "kk_meeting",
+   "title": "Жылыту маусымына дайындық және цифрландыру (синтетическая запись, KZ)",
+   "date": "2026-09-23",
+   "chair": "Ерлан Маратұлы",
+   "participants": [
+    {
+     "name": "Ерлан Маратұлы",
+     "role": "басқарма төрағасының орынбасары (председатель)",
+     "present": true
+    },
+    {
+     "name": "Динара Серікқызы",
+     "role": "қаржы департаментінің директоры",
+     "present": true
+    },
+    {
+     "name": "Ержан Болатұлы",
+     "role": "өндіріс департаментінің директоры",
+     "present": true
+    }
+   ],
+   "languages": [
+    "KZ"
+   ]
+  }
+ ],
+ "tasks": [
+  {
+   "id": "KK-T01",
+   "meeting": "kk_meeting",
+   "description": "Завершить ремонт оставшихся двух котельных (замена труб)",
+   "description_alt": "Қалған екі қазандықтың жөндеуін аяқтау",
+   "assignee": "Ержан Болатұлы",
+   "assignee_kind": "person_present",
+   "co_assignees": [],
+   "issued_by": "Ерлан Маратұлы",
+   "deadline_raw": "бірінші қазанға дейін",
+   "deadline_kind": "absolute_date",
+   "deadline_iso": "2026-10-01",
+   "source_quote": "Ержан Болатұлы, қалған екі қазандықтың жөндеуін бірінші қазанға дейін аяқтаңыз.",
+   "appears_in_protocol_table": true
+  },
+  {
+   "id": "KK-T02",
+   "meeting": "kk_meeting",
+   "description": "Подготовить обоснование на дополнительное финансирование (300 млн тенге)",
+   "description_alt": "Қосымша қаржыға негіздеме дайындау",
+   "assignee": "Динара Серікқызы",
+   "assignee_kind": "person_present",
+   "co_assignees": [],
+   "issued_by": "Ерлан Маратұлы",
+   "deadline_raw": "жұма күнге дейін",
+   "deadline_kind": "relative_week",
+   "deadline_iso": "2026-09-25",
+   "source_quote": "Онда Динара Серікқызы, қосымша қаржыға негіздемені жұма күнге дейін дайындаңыз.",
+   "appears_in_protocol_table": true
+  },
+  {
+   "id": "KK-T03",
+   "meeting": "kk_meeting",
+   "description": "Направить заявку на закуп датчиков для котельных",
+   "description_alt": "Датчиктерді сатып алуға өтінім жіберу",
+   "assignee": "Ержан Болатұлы",
+   "assignee_kind": "person_present",
+   "co_assignees": [],
+   "issued_by": "Ерлан Маратұлы",
+   "deadline_raw": "келесі дүйсенбіге дейін",
+   "deadline_kind": "relative_week",
+   "deadline_iso": "2026-09-28",
+   "source_quote": "Ержан Болатұлы, датчиктерді сатып алуға өтінімді келесі дүйсенбіге дейін жіберіңіз.",
+   "appears_in_protocol_table": true
+  },
+  {
+   "id": "KK-T04",
+   "meeting": "kk_meeting",
+   "description": "Разослать график (таблицу) расходов всем руководителям",
+   "description_alt": "Шығындар кестесін барлық басшыларға жіберу",
+   "assignee": "Динара Серікқызы",
+   "assignee_kind": "person_present",
+   "co_assignees": [],
+   "issued_by": "Ерлан Маратұлы",
+   "deadline_raw": "айдың соңына дейін",
+   "deadline_kind": "relative_month",
+   "deadline_iso": "2026-09-30",
+   "source_quote": "Ал Динара Серікқызы, айдың соңына дейін шығындар кестесін барлық басшыларға жіберіңіз.",
+   "appears_in_protocol_table": true
+  },
+  {
+   "id": "KK-T05",
+   "meeting": "kk_meeting",
+   "description": "Подготовить полный отчёт о готовности к отопительному сезону",
+   "description_alt": "Жылыту маусымына дайындық туралы толық есеп дайындау",
+   "assignee": "Ержан Болатұлы",
+   "assignee_kind": "person_present",
+   "co_assignees": [],
+   "issued_by": "Ерлан Маратұлы",
+   "deadline_raw": "он бесінші қазанға дейін",
+   "deadline_kind": "absolute_date",
+   "deadline_iso": "2026-10-15",
+   "source_quote": "Ержан Болатұлы, он бесінші қазанға дейін жылыту маусымына дайындық туралы толық есеп дайындаңыз.",
+   "appears_in_protocol_table": true
+  }
+ ]
+}

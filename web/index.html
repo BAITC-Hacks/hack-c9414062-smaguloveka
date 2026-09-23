@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Hatshy — секретарь совещаний</title>
+<link rel="stylesheet" href="/static/fonts.css">
+<script src="/static/vendor/react.production.min.js"></script>
+<script src="/static/vendor/react-dom.production.min.js"></script>
+<script src="/static/support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}*{box-sizing:border-box}
+:root,[data-theme="light"]{--bg:oklch(0.985 0.002 250);--surface:#fff;--soft:oklch(0.965 0.003 250);--line:oklch(0.92 0.004 250);--ink:oklch(0.23 0.006 250);--ink2:oklch(0.47 0.006 250);--ink3:oklch(0.62 0.006 250);--accent:oklch(0.61 0.21 27);--accentSoft:oklch(0.955 0.025 27);--ok:oklch(0.56 0.12 155);--okSoft:oklch(0.955 0.03 155);--warn:oklch(0.6 0.13 70);--warnSoft:oklch(0.96 0.035 80);--inv:oklch(0.23 0.006 250);--invInk:#fff;--shade:oklch(0.2 0.01 250 / 0.28)}
+[data-theme="dark"]{--bg:oklch(0.165 0.004 250);--surface:oklch(0.2 0.005 250);--soft:oklch(0.245 0.005 250);--line:oklch(0.3 0.006 250);--ink:oklch(0.95 0.003 250);--ink2:oklch(0.75 0.005 250);--ink3:oklch(0.6 0.006 250);--accent:oklch(0.67 0.19 27);--accentSoft:oklch(0.29 0.06 27);--ok:oklch(0.74 0.12 155);--okSoft:oklch(0.29 0.045 155);--warn:oklch(0.8 0.12 75);--warnSoft:oklch(0.31 0.045 75);--inv:oklch(0.95 0.003 250);--invInk:oklch(0.17 0.004 250);--shade:oklch(0 0 0 / 0.5)}
+a{color:var(--ink);text-decoration:none}a:hover{color:var(--accent)}
+input,button,select{font-family:inherit}
+input[type="date"]{color-scheme:light dark}
+@keyframes hpulse{0%{box-shadow:0 0 0 0 oklch(0.61 0.21 27 / 0.55)}100%{box-shadow:0 0 0 9px oklch(0.61 0.21 27 / 0)}}
+@keyframes hwave{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+@keyframes hin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:960px){
+div[data-theme]{flex-direction:column}
+div[data-theme]>aside{width:auto!important;height:auto!important;position:sticky!important;top:0;z-index:15;flex-direction:row!important;flex-wrap:wrap;align-items:center;gap:10px!important;padding:10px 12px!important;border-right:none!important;border-bottom:1px solid var(--line)}
+div[data-theme]>aside>nav{flex-direction:row!important;flex-wrap:wrap}
+div[data-theme]>aside>nav>button{height:32px!important}
+div[data-theme]>aside>div:last-child{display:none!important}
+div[data-theme]>main{padding:16px 14px 40px!important}
+}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="display:flex;min-height:100vh;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.45">
+
+<aside style="width:244px;flex-shrink:0;border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;padding:20px 14px;gap:20px;position:sticky;top:0;height:100vh;overflow-y:auto">
+  <div style="display:flex;align-items:center;gap:10px;padding:0 8px;flex-shrink:0">
+    <div style="width:26px;height:26px;border-radius:7px;background:var(--inv);display:flex;align-items:center;justify-content:center"><div style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></div></div>
+    <div style="font-weight:600;font-size:16px;letter-spacing:-0.01em">AI Hatshy</div>
+  </div>
+  <sc-if value="{{canRecord}}" hint-placeholder-val="{{true}}">
+    <button onClick="{{openNew}}" style="flex-shrink:0;height:38px;border-radius:9px;border:none;background:var(--inv);color:var(--invInk);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="opacity:0.88">
+      <span style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></span>{{t.newMeeting}}
+    </button>
+  </sc-if>
+  <nav style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="5">
+      <button onClick="{{n.onClick}}" style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px;border-radius:8px;border:none;background:{{n.bg}};color:{{n.fg}};font-size:14px;font-weight:{{n.fw}};cursor:pointer;text-align:left" style-hover="background:var(--soft)">
+        <span>{{n.label}}</span>
+        <sc-if value="{{n.hasBadge}}" hint-placeholder-val="{{false}}"><span style="min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:{{n.badgeBg}};color:{{n.badgeFg}};font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center">{{n.badge}}</span></sc-if>
+      </button>
+    </sc-for>
+  </nav>
+  <sc-if value="{{showLiveMini}}" hint-placeholder-val="{{false}}">
+    <button onClick="{{goLive}}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--accentSoft);color:var(--ink);cursor:pointer;font-size:13px;text-align:left">
+      {{pulseDot}}<span style="flex:1">Идёт запись</span><span style="font-family:'IBM Plex Mono',monospace">{{timer}}</span>
+    </button>
+  </sc-if>
+  <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px;flex-shrink:0">
+    <div style="padding:10px 12px;border-radius:9px;background:var(--soft);font-size:12px;color:var(--ink2);display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:6px;color:var(--ink);font-weight:500"><span style="width:6px;height:6px;border-radius:50%;background:{{contourDot}}"></span>Закрытый контур</div>
+      <div>{{contourText}}</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1;display:flex;padding:3px;border-radius:8px;background:var(--soft);gap:2px">
+        <sc-for list="{{langs}}" as="l" hint-placeholder-count="3">
+          <button onClick="{{l.onClick}}" style="flex:1;height:26px;border:none;border-radius:6px;background:{{l.bg}};color:{{l.fg}};font-size:12px;font-weight:500;cursor:pointer">{{l.label}}</button>
+        </sc-for>
+      </div>
+      <button onClick="{{toggleTheme}}" title="Тема" style="width:32px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center"><span style="width:12px;height:12px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+    </div>
+    <button onClick="{{cycleRole}}" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:9px;border:none;background:transparent;color:var(--ink);cursor:pointer;text-align:left" style-hover="background:var(--soft)">
+      <span style="width:32px;height:32px;border-radius:50%;background:{{me.color}};color:#fff;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{me.ini}}</span>
+      <span style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:500;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{me.name}}</span><span style="font-size:12px;color:var(--ink2)">{{roleLabel}} · сменить</span></span>
+    </button>
+    <a href="/m" style="font-size:12px;color:var(--ink2);padding:0 8px">Мобильная версия →</a>
+  </div>
+</aside>
+
+<main style="flex:1;min-width:0;padding:28px 36px 60px">
+
+<sc-if value="{{hasApiErr}}" hint-placeholder-val="{{false}}">
+  <div style="max-width:1200px;margin:0 auto 16px;padding:10px 14px;border-radius:10px;background:var(--accentSoft);color:var(--accent);font-size:13px">Сервер недоступен: {{apiErr}}. Повторная попытка через 5 с.</div>
+</sc-if>
+
+<sc-if value="{{isMeetings}}" hint-placeholder-val="{{true}}">
+<div style="max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em">{{t.meetings}}</h1>
+      <div style="color:var(--ink2);margin-top:4px">{{mSub}}</div>
+    </div>
+    <input value="{{q}}" onChange="{{onQ}}" placeholder="Поиск по названию и участникам" style="width:300px;max-width:100%;height:38px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;outline:none">
+  </div>
+  <sc-if value="{{showLiveBanner}}" hint-placeholder-val="{{false}}">
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:var(--accentSoft);border:1px solid var(--line)">
+      {{pulseDot}}
+      <div style="flex:1"><div style="font-weight:500">{{liveTitle}}</div><div style="font-size:13px;color:var(--ink2)">Идёт запись · {{platform}} · {{timer}}</div></div>
+      <button onClick="{{goLive}}" style="height:34px;padding:0 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-weight:500;cursor:pointer">Открыть трансляцию</button>
+    </div>
+  </sc-if>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <sc-for list="{{mfilters}}" as="f" hint-placeholder-count="3">
+      <button onClick="{{f.onClick}}" style="height:32px;padding:0 12px;border-radius:16px;border:1px solid {{f.border}};background:{{f.bg}};color:{{f.fg}};font-size:13px;cursor:pointer">{{f.label}}</button>
+    </sc-for>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto">
+    <div style="display:grid;min-width:940px;grid-template-columns:minmax(0,2.6fr) 110px 80px 130px 110px 90px 130px;gap:16px;padding:10px 18px;font-size:12px;color:var(--ink3);border-bottom:1px solid var(--line)">
+      <div>Совещание</div><div>Дата</div><div>Длит.</div><div>Участники</div><div>Языки</div><div>Поручения</div><div>Статус</div>
+    </div>
+    <sc-if value="{{noMeetings}}" hint-placeholder-val="{{false}}">
+      <div style="padding:28px 18px;color:var(--ink2);font-size:14px">{{noMeetingsText}}</div>
+    </sc-if>
+    <sc-for list="{{meetings}}" as="m" hint-placeholder-count="6">
+      <div onClick="{{m.onClick}}" style="display:grid;min-width:940px;grid-template-columns:minmax(0,2.6fr) 110px 80px 130px 110px 90px 130px;gap:16px;padding:14px 18px;align-items:center;border-bottom:1px solid var(--line);cursor:pointer" style-hover="background:var(--soft)">
+        <div style="min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{m.title}}</div><div style="font-size:12px;color:var(--ink2)">{{m.source}}</div></div>
+        <div style="color:var(--ink2)">{{m.date}}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink2)">{{m.dur}}</div>
+        <div style="display:flex">
+          <sc-for list="{{m.av}}" as="a" hint-placeholder-count="3"><span title="{{a.name}}" style="width:26px;height:26px;margin-right:-6px;border-radius:50%;border:2px solid var(--surface);background:{{a.color}};color:#fff;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center">{{a.ini}}</span></sc-for>
+          <sc-if value="{{m.hasMore}}" hint-placeholder-val="{{false}}"><span style="width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);background:var(--soft);color:var(--ink2);font-size:10px;display:flex;align-items:center;justify-content:center">+{{m.more}}</span></sc-if>
+          <sc-if value="{{m.noPeople}}" hint-placeholder-val="{{false}}"><span style="color:var(--ink3)">—</span></sc-if>
+        </div>
+        <div style="font-size:12px;color:var(--ink2);font-family:'IBM Plex Mono',monospace">{{m.langs}}</div>
+        <div>{{m.tasks}}</div>
+        <div><span title="{{m.err}}" style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;background:{{m.sBg}};color:{{m.sFg}};font-size:12px;font-weight:500">{{m.status}}</span></div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isLive}}" hint-placeholder-val="{{false}}">
+<div style="max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    {{pulseDot}}
+    <div style="flex:1;min-width:220px">
+      <div style="font-size:18px;font-weight:600;letter-spacing:-0.01em">{{liveTitle}}</div>
+      <div style="font-size:13px;color:var(--ink2);display:flex;gap:10px;flex-wrap:wrap;margin-top:2px"><span>{{platform}} · {{liveDevice}}</span><span>·</span><span>{{liveState}}</span></div>
+    </div>
+    {{wave}}
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:500;min-width:110px;text-align:right">{{timer}}</div>
+    <div style="display:flex;gap:8px">
+      <button onClick="{{togglePause}}" style="height:38px;padding:0 16px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:500;cursor:pointer">{{pauseLabel}}</button>
+      <button onClick="{{stopLive}}" style="height:38px;padding:0 16px;border-radius:9px;border:none;background:var(--accent);color:#fff;font-weight:500;cursor:pointer;opacity:{{stopOpacity}}">{{stopLabel}}</button>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--soft);font-size:13px;color:var(--ink2)">
+    <span style="width:6px;height:6px;border-radius:50%;background:{{consentDot}}"></span>
+    {{consentText}}
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+    <div style="flex:3 1 480px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column">
+      <div style="padding:14px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:500">Транскрипт в реальном времени</div>
+        <div style="font-size:12px;color:var(--ink3);font-family:'IBM Plex Mono',monospace">RU · KZ · RU+KZ</div>
+      </div>
+      <div ref="{{trRef}}" style="height:520px;overflow-y:auto;padding:8px 20px 20px;display:flex;flex-direction:column">
+        <sc-if value="{{liveNotify}}" hint-placeholder-val="{{true}}"><div style="padding:12px 0;font-size:13px;color:var(--ink3);border-bottom:1px dashed var(--line)">AI Hatshy: Назар аударыңыздар, кеңес жазылып, ИИ арқылы транскрипцияланады. Внимание, совещание записывается.</div></sc-if>
+        <sc-for list="{{liveSegs}}" as="s" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:62px minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:1px solid var(--line);animation:hin .4s ease">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3);padding-top:2px">{{s.t}}</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:8px;height:8px;border-radius:50%;background:{{s.color}}"></span><span style="font-weight:500">{{s.name}}</span><span style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--ink3);border:1px solid var(--line);border-radius:4px;padding:0 5px">{{s.l}}</span></div>
+              <div style="text-wrap:pretty">{{s.x}}</div>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{hasLiveErr}}" hint-placeholder-val="{{false}}"><div style="padding:10px 0;color:var(--accent);font-size:13px">Распознавание фрагмента: {{liveErr}}</div></sc-if>
+        <sc-if value="{{listening}}" hint-placeholder-val="{{true}}"><div style="padding:14px 0;color:var(--ink3);font-size:13px">Слушаю…</div></sc-if>
+      </div>
+    </div>
+    <div style="flex:1 1 320px;max-width:100%;display:flex;flex-direction:column;gap:20px">
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between"><div style="font-weight:500">Обнаруженные поручения</div><div style="color:var(--ink3)">—</div></div>
+        <div style="font-size:13px;color:var(--ink3)">Поручения, ответственные и сроки появятся после обработки записи.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-weight:500">Говорящие · диаризация</div>
+        <div style="font-size:13px;color:var(--ink3)">Разделение по говорящим и доля речи появятся после обработки записи.</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span>Распознано фрагментов</span><span style="color:var(--ink3);font-family:'IBM Plex Mono',monospace;font-size:12px">{{liveCount}}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span>Отправлено аудио</span><span style="color:var(--ink3);font-family:'IBM Plex Mono',monospace;font-size:12px">{{liveSent}}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isProcessing}}" hint-placeholder-val="{{false}}">
+<div style="max-width:520px;margin:80px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:22px">
+  <div><div style="font-size:20px;font-weight:600;letter-spacing:-0.01em">Формируем протокол</div><div style="color:var(--ink2);margin-top:4px">{{procTitle}} · обработка записи</div></div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <sc-for list="{{procSteps}}" as="p" hint-placeholder-count="5">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:22px;height:22px;border-radius:50%;background:{{p.bg}};color:{{p.fg}};border:1px solid {{p.border}};font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{p.mark}}</span>
+        <span style="color:{{p.text}}">{{p.label}}</span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink3)"><span>{{procLabel}}</span><span style="font-family:'IBM Plex Mono',monospace">{{procPct}}%</span></div>
+    <div style="height:4px;border-radius:2px;background:var(--soft)"><div style="height:4px;border-radius:2px;background:var(--inv);width:{{procPct}}%;transition:width .6s"></div></div>
+  </div>
+  <sc-if value="{{hasProcErr}}" hint-placeholder-val="{{false}}">
+    <div style="padding:12px 14px;border-radius:10px;background:var(--accentSoft);color:var(--accent);font-size:13px;text-wrap:pretty">Ошибка обработки: {{procErr}}</div>
+    <div style="display:flex;gap:8px">
+      <button onClick="{{goMeetings}}" style="height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer">← К совещаниям</button>
+      <button onClick="{{deleteProc}}" style="height:36px;padding:0 14px;border-radius:9px;border:none;background:var(--accent);color:#fff;cursor:pointer">Удалить запись</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{procRunning}}" hint-placeholder-val="{{true}}">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:var(--ink3)"><span>Страницу можно закрыть — обработка продолжится на сервере.</span><button onClick="{{goMeetings}}" style="border:none;background:none;padding:0;color:var(--ink2);cursor:pointer;font-size:12px;white-space:nowrap" style-hover="color:var(--ink)">← {{t.meetings}}</button></div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{isProtocol}}" hint-placeholder-val="{{false}}">
+<div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <button onClick="{{goMeetings}}" style="align-self:flex-start;border:none;background:none;padding:0;color:var(--ink2);cursor:pointer;font-size:13px" style-hover="color:var(--ink)">← {{t.meetings}}</button>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap">
+    <div style="min-width:0">
+      <h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em;text-wrap:pretty">{{meeting.title}}</h1>
+      <div style="color:var(--ink2);margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><span style="white-space:nowrap">{{meeting.dateL}}</span><span>·</span><span>{{meeting.dur}}</span><span>·</span><span>{{meeting.source}}</span><span>·</span><span>{{meeting.nPeople}}</span><sc-if value="{{meeting.hasLangs}}" hint-placeholder-val="{{true}}"><span>·</span><span>{{meeting.langs}}</span></sc-if></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onClick="{{reprocessMeeting}}" title="Заново распознать запись и выделить поручения" style="height:38px;padding:0 10px;border:none;background:none;color:var(--ink3);font-size:13px;cursor:pointer" style-hover="color:var(--ink)">Переобработать</button>
+      <button onClick="{{deleteMeeting}}" title="Удалить совещание, аудио и все данные" style="height:38px;padding:0 10px;border:none;background:none;color:var(--ink3);font-size:13px;cursor:pointer" style-hover="color:var(--accent)">Удалить</button>
+      <button onClick="{{sendExtracts}}" style="height:38px;padding:0 16px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:500;cursor:pointer" style-hover="background:var(--soft)">Разослать выдержки</button>
+      <button onClick="{{openExport}}" style="height:38px;padding:0 16px;border-radius:9px;border:none;background:var(--inv);color:var(--invInk);font-weight:500;cursor:pointer">Экспорт PDF / DOCX</button>
+    </div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+    <div style="flex:3 1 520px;display:flex;flex-direction:column;gap:16px;min-width:0">
+      <div style="display:flex;gap:4px;border-bottom:1px solid var(--line)">
+        <sc-for list="{{ptabs}}" as="tb" hint-placeholder-count="3">
+          <button onClick="{{tb.onClick}}" style="height:38px;padding:0 14px;border:none;border-bottom:2px solid {{tb.border}};margin-bottom:-1px;background:none;color:{{tb.fg}};font-weight:500;font-size:14px;cursor:pointer">{{tb.label}}</button>
+        </sc-for>
+      </div>
+      <sc-if value="{{isSummary}}" hint-placeholder-val="{{true}}">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Краткое содержание</div>
+            <p style="margin:0;font-size:15px;line-height:1.6;text-wrap:pretty">{{sumShort}}</p>
+            <sc-if value="{{hasNumbers}}" hint-placeholder-val="{{false}}">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+                <sc-for list="{{numbers}}" as="nb" hint-placeholder-count="3"><span style="display:inline-flex;align-items:baseline;gap:6px;padding:5px 10px;border-radius:8px;background:var(--soft);font-size:12px;color:var(--ink2)"><span style="font-weight:600;font-size:14px;color:var(--ink)">{{nb.value}}</span>{{nb.meaning}}</span></sc-for>
+              </div>
+            </sc-if>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Принятые решения</div>
+            <sc-if value="{{noDecisions}}" hint-placeholder-val="{{false}}"><div style="font-size:14px;color:var(--ink3)">Решения не выделены.</div></sc-if>
+            <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{decisions}}" as="dc" hint-placeholder-count="4"><li>{{dc.x}}</li></sc-for>
+            </ol>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:4px">
+              <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Повестка</div>
+              <sc-if value="{{noTopics}}" hint-placeholder-val="{{false}}"><div style="font-size:13px;color:var(--ink3)">Темы не выделены.</div></sc-if>
+              <sc-for list="{{topics}}" as="tp" hint-placeholder-count="5">
+                <button onClick="{{tp.onClick}}" style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border:none;border-bottom:1px solid var(--line);background:none;color:var(--ink);font-size:14px;text-align:left;cursor:pointer" style-hover="color:var(--accent)"><span>{{tp.label}}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3)">{{tp.t}}</span></button>
+              </sc-for>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Доля речи</div>
+              <sc-for list="{{speakers}}" as="p" hint-placeholder-count="6">
+                <div style="display:grid;grid-template-columns:130px minmax(0,1fr) 36px;gap:10px;align-items:center;font-size:13px">
+                  <button onClick="{{p.rename}}" title="{{p.full}} · нажмите, чтобы переименовать" style="display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;border:none;background:none;padding:0;color:var(--ink);font-size:13px;cursor:pointer;text-align:left" style-hover="color:var(--accent)"><span style="width:8px;height:8px;border-radius:50%;background:{{p.color}};flex-shrink:0"></span>{{p.short}}</button>
+                  <div style="height:4px;border-radius:2px;background:var(--soft)"><div style="height:4px;border-radius:2px;width:{{p.pct}}%;background:{{p.color}}"></div></div>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3);text-align:right">{{p.pct}}%</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{isReport}}" hint-placeholder-val="{{false}}">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <sc-if value="{{rep.none}}" hint-placeholder-val="{{false}}">
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px 24px;display:flex;flex-direction:column;align-items:flex-start;gap:12px">
+              <div style="font-weight:500;font-size:16px">Подробная сводка ещё не сформирована</div>
+              <div style="color:var(--ink2);font-size:14px;text-wrap:pretty;max-width:620px">Развёрнутый отчёт по встрече для тех, кто на ней не был: разбор каждого вопроса, факты и цифры, решения, поручения, риски, открытые вопросы, вклад участников и следующие шаги.</div>
+              <button onClick="{{rep.make}}" style="height:38px;padding:0 18px;border-radius:9px;border:none;background:var(--inv);color:var(--invInk);font-weight:500;cursor:pointer;opacity:{{rep.btnOp}}">{{rep.btnLabel}}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{rep.has}}" hint-placeholder-val="{{true}}">
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:10px">
+              <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Обзор встречи</div>
+              <p style="margin:0;font-size:15px;line-height:1.65;text-wrap:pretty">{{rep.overview}}</p>
+            </div>
+            <sc-for list="{{rep.sections}}" as="sec" hint-placeholder-count="2">
+              <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+                  <div style="display:flex;gap:10px;align-items:baseline;min-width:0"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3)">{{sec.num}}</span><span style="font-size:17px;font-weight:600;letter-spacing:-0.01em;text-wrap:pretty">{{sec.title}}</span></div>
+                  <button onClick="{{sec.jump}}" style="border:none;background:none;padding:0;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3);cursor:pointer;flex-shrink:0" style-hover="color:var(--accent)">{{sec.t}}</button>
+                </div>
+                <p style="margin:0;font-size:14px;line-height:1.65;text-wrap:pretty">{{sec.discussion}}</p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+                  <sc-for list="{{sec.blocks}}" as="b" hint-placeholder-count="2">
+                    <div style="padding:12px 14px;border-radius:10px;background:var(--soft);display:flex;flex-direction:column;gap:6px">
+                      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em"><span style="width:7px;height:7px;border-radius:2px;background:{{b.color}}"></span>{{b.label}}</div>
+                      <sc-for list="{{b.items}}" as="it" hint-placeholder-count="2"><div style="font-size:13px;line-height:1.5;text-wrap:pretty">• {{it}}</div></sc-for>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+              <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:10px">
+                <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Участники и их позиции</div>
+                <sc-for list="{{rep.people}}" as="p" hint-placeholder-count="3"><div style="font-size:13px;line-height:1.5;text-wrap:pretty"><span style="font-weight:500">{{p.name}}</span> — {{p.contribution}}</div></sc-for>
+              </div>
+              <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:10px">
+                <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Следующие шаги</div>
+                <sc-for list="{{rep.next}}" as="n" hint-placeholder-count="3"><div style="display:flex;gap:10px;font-size:13px;line-height:1.5"><span style="font-family:'IBM Plex Mono',monospace;color:var(--ink3)">{{n.i}}</span><span style="text-wrap:pretty">{{n.x}}</span></div></sc-for>
+              </div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Вывод</div>
+              <p style="margin:0;font-size:15px;line-height:1.6;text-wrap:pretty">{{rep.conclusion}}</p>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:var(--ink3)"><span>Сформировано {{rep.generated}}</span><button onClick="{{rep.make}}" style="border:none;background:none;color:var(--ink2);font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:3px">{{rep.refreshLabel}}</button></div>
+          </sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{isTranscript}}" hint-placeholder-val="{{false}}">
+        <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--soft)">
+            <button onClick="{{togglePlay}}" title="Воспроизведение записи" style="width:34px;height:34px;border-radius:50%;border:none;background:var(--inv);color:var(--invInk);cursor:pointer;font-size:11px;flex-shrink:0">{{playIcon}}</button>
+            <div onClick="{{onBar}}" style="flex:1;height:14px;display:flex;align-items:center;cursor:pointer"><div style="flex:1;height:4px;border-radius:2px;background:var(--line);position:relative"><div style="position:absolute;left:0;top:0;height:4px;border-radius:2px;width:{{playPct}}%;background:var(--ink)"></div></div></div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink2)">{{playTime}} / {{playDur}}</span>
+          </div>
+          <div style="padding:4px 20px 12px">
+            <sc-if value="{{noSegs}}" hint-placeholder-val="{{false}}"><div style="padding:16px 0;color:var(--ink3)">{{noSegsText}}</div></sc-if>
+            <sc-for list="{{segs}}" as="s" hint-placeholder-count="6">
+              <div id="{{s.elId}}" style="display:grid;grid-template-columns:62px minmax(0,1fr);gap:12px;padding:12px 10px;margin:0 -10px;border-radius:8px;background:{{s.bg}};transition:background .3s">
+                <button onClick="{{s.seek}}" title="Перейти к фрагменту" style="border:none;background:none;padding:2px 0 0;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3);cursor:pointer;align-self:start" style-hover="color:var(--accent)">{{s.t}}</button>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:8px;height:8px;border-radius:50%;background:{{s.color}}"></span><button onClick="{{s.rename}}" title="Переименовать говорящего" style="border:none;background:none;padding:0;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer" style-hover="color:var(--accent)">{{s.name}}</button><span style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--ink3);border:1px solid var(--line);border-radius:4px;padding:0 5px">{{s.l}}</span></div>
+                  <div style="text-wrap:pretty">{{s.x}}</div>
+                  <sc-if value="{{s.hasTask}}" hint-placeholder-val="{{false}}"><button onClick="{{s.openTask}}" style="align-self:flex-start;display:flex;gap:6px;align-items:center;margin-top:2px;padding:4px 10px;border-radius:6px;border:none;background:var(--warnSoft);font-size:12px;color:var(--ink);cursor:pointer"><span style="font-weight:500">Поручение</span><span style="color:var(--ink2)">{{s.taskHint}}</span></button></sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:1 1 340px;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;position:sticky;top:20px">
+      <div style="padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:500">Поручения · {{mtaskCount}}</div>
+        <button onClick="{{confirmAll}}" style="border:none;background:none;color:var(--ink2);font-size:13px;cursor:pointer" style-hover="color:var(--ink)">{{confirmAllLabel}}</button>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        <sc-if value="{{noMtasks}}" hint-placeholder-val="{{false}}"><div style="padding:16px 18px;font-size:13px;color:var(--ink3)">Поручений не выделено.</div></sc-if>
+        <sc-for list="{{mtasks}}" as="k" hint-placeholder-count="5">
+          <div style="padding:14px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px">
+            <button onClick="{{k.onClick}}" style="border:none;background:none;padding:0;text-align:left;color:var(--ink);font-weight:500;font-size:14px;cursor:pointer;text-wrap:pretty" style-hover="color:var(--accent)">{{k.title}}</button>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px">
+              <span style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:50%;background:{{k.color}};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{k.ini}}</span>{{k.ownerShort}}</span>
+              <span style="color:{{k.dueColor}};text-align:right">{{k.dueFmt}}</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink3)">
+              <span style="font-family:'IBM Plex Mono',monospace">{{k.t}} · уверенность {{k.conf}}%<sc-if value="{{k.review}}" hint-placeholder-val="{{false}}"><span style="color:var(--warn);font-family:'IBM Plex Sans',system-ui,sans-serif"> · требует проверки</span></sc-if></span>
+              <sc-if value="{{k.unconfirmed}}" hint-placeholder-val="{{true}}"><button onClick="{{k.confirm}}" style="height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12px;cursor:pointer" style-hover="background:var(--soft)">Подтвердить</button></sc-if>
+              <sc-if value="{{k.confirmed}}" hint-placeholder-val="{{false}}"><span style="color:var(--ok)">✓ Подтверждено</span></sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isTasks}}" hint-placeholder-val="{{false}}">
+<div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div><h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em">{{tasksTitle}}</h1><div style="color:var(--ink2);margin-top:4px">Из протоколов совещаний · сегодня {{todayLabel}}</div></div>
+    <div style="display:flex;padding:3px;border-radius:9px;background:var(--soft);gap:2px">
+      <sc-for list="{{views}}" as="v" hint-placeholder-count="2"><button onClick="{{v.onClick}}" style="height:30px;padding:0 14px;border:none;border-radius:7px;background:{{v.bg}};color:{{v.fg}};font-size:13px;font-weight:500;cursor:pointer">{{v.label}}</button></sc-for>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <input value="{{tq}}" onChange="{{onTq}}" placeholder="Поиск по поручениям" style="width:220px;max-width:100%;height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;outline:none">
+    <sc-for list="{{fsel}}" as="f" hint-placeholder-count="5">
+      <label style="display:flex;align-items:center;gap:4px;height:36px;padding:0 4px 0 12px;border-radius:9px;border:1px solid {{f.border}};background:var(--surface);font-size:13px;color:var(--ink3);max-width:100%">{{f.label}}
+        <select value="{{f.value}}" onChange="{{f.onChange}}" style="border:none;background:transparent;color:var(--ink);font-size:13px;font-weight:500;height:32px;outline:none;cursor:pointer;max-width:180px">
+          <sc-for list="{{f.options}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.l}}</option></sc-for>
+        </select>
+      </label>
+    </sc-for>
+    <sc-if value="{{hasFilters}}" hint-placeholder-val="{{false}}"><button onClick="{{resetFilters}}" style="height:36px;padding:0 12px;border-radius:9px;border:none;background:none;color:var(--ink2);font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px">Сбросить · {{activeN}}</button></sc-if>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+    <sc-for list="{{stats}}" as="st" hint-placeholder-count="4">
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:2px">
+        <div style="font-size:28px;font-weight:600;letter-spacing:-0.02em;color:{{st.color}}">{{st.n}}</div>
+        <div style="font-size:13px;color:var(--ink2)">{{st.label}}</div>
+      </div>
+    </sc-for>
+  </div>
+  <sc-if value="{{isDash}}" hint-placeholder-val="{{true}}">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-wrap:wrap;gap:16px">
+        <div style="flex:1 1 300px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Исполнительская дисциплина</div>
+          <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:48px;font-weight:600;letter-spacing:-0.03em;line-height:1">{{disc}}%</span><span style="color:var(--ink2);font-size:13px">поручений с наступившим сроком закрыты вовремя</span></div>
+          <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;background:var(--soft);margin-top:auto">
+            <sc-for list="{{statusBar}}" as="b" hint-placeholder-count="3"><div style="width:{{b.pct}}%;background:{{b.color}};transition:width .4s"></div></sc-for>
+          </div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <sc-for list="{{statusBar}}" as="b" hint-placeholder-count="3"><span style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2)"><span style="width:8px;height:8px;border-radius:2px;background:{{b.color}}"></span>{{b.label}} · {{b.n}}</span></sc-for>
+          </div>
+        </div>
+        <div style="flex:2 1 460px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Сроки на две недели</div>
+            <div style="display:flex;gap:12px;font-size:12px;color:var(--ink2)"><span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:var(--accent)"></span>Высокая</span><span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:var(--warn)"></span>Средняя</span><span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:var(--ink3)"></span>Низкая</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:4px">
+            <sc-for list="{{days}}" as="d" hint-placeholder-count="14">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0 6px;border-radius:8px;background:{{d.bg}}">
+                <div style="height:84px;width:100%;display:flex;flex-direction:column-reverse;align-items:center;gap:3px;padding:0 3px">
+                  <sc-for list="{{d.items}}" as="k" hint-placeholder-count="1"><span onClick="{{k.onClick}}" title="{{k.title}}" style="width:100%;max-width:28px;height:16px;border-radius:4px;background:{{k.bg}};cursor:pointer;flex-shrink:0"></span></sc-for>
+                </div>
+                <div style="font-size:13px;font-weight:{{d.fw}};color:{{d.fg}}">{{d.n}}</div>
+                <div style="font-size:10px;color:var(--ink3)">{{d.wd}}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:16px">
+        <div style="flex:3 1 460px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Нагрузка по ответственным</div>
+          <sc-for list="{{load}}" as="o" hint-placeholder-count="5">
+            <div onClick="{{o.onClick}}" style="display:grid;grid-template-columns:150px minmax(0,1fr) 90px;gap:12px;align-items:center;cursor:pointer;font-size:13px" style-hover="opacity:0.8">
+              <span style="display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden"><span style="width:24px;height:24px;border-radius:50%;background:{{o.color}};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{o.ini}}</span>{{o.name}}</span>
+              <div style="display:flex;gap:2px;height:12px;width:{{o.w}}%;border-radius:4px;overflow:hidden">
+                <sc-for list="{{o.segs}}" as="g" hint-placeholder-count="2"><div style="flex:{{g.n}};background:{{g.color}}"></div></sc-for>
+              </div>
+              <span style="text-align:right;color:var(--ink2)">{{o.total}} · <span style="color:{{o.overColor}}">{{o.over}} просроч.</span></span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex:2 1 300px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">По направлениям</div>
+          <sc-for list="{{dirStats}}" as="r" hint-placeholder-count="5">
+            <div onClick="{{r.onClick}}" style="display:flex;flex-direction:column;gap:5px;cursor:pointer;font-size:13px" style-hover="opacity:0.8">
+              <div style="display:flex;justify-content:space-between"><span>{{r.label}}</span><span style="color:var(--ink2);font-family:'IBM Plex Mono',monospace;font-size:12px">{{r.open}} / {{r.total}}</span></div>
+              <div style="height:6px;border-radius:3px;background:var(--soft)"><div style="height:6px;border-radius:3px;width:{{r.w}}%;background:var(--ink)"></div></div>
+            </div>
+          </sc-for>
+          <div style="font-size:12px;color:var(--ink3)">открытые / всего</div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Просроченные поручения</div><span style="color:var(--accent);font-weight:500">{{overN}}</span></div>
+        <sc-if value="{{noOverdue}}" hint-placeholder-val="{{false}}"><div style="font-size:13px;color:var(--ink2)">Просроченных поручений нет.</div></sc-if>
+        <sc-for list="{{overdueList}}" as="k" hint-placeholder-count="2">
+          <div onClick="{{k.onClick}}" style="display:flex;align-items:center;gap:14px;padding:10px 0;border-top:1px solid var(--line);cursor:pointer;flex-wrap:wrap">
+            <div style="flex:1;min-width:220px"><div style="font-weight:500">{{k.title}}</div><div style="font-size:12px;color:var(--ink3)">{{k.meeting}}</div></div>
+            <span style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:22px;height:22px;border-radius:50%;background:{{k.color}};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center">{{k.ini}}</span>{{k.ownerShort}}</span>
+            <span style="font-size:13px;color:var(--accent);min-width:150px">{{k.dueLabel}}</span>
+            <button onClick="{{k.remind}}" style="height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;cursor:pointer" style-hover="background:var(--soft)">Напомнить</button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{isBoard}}" hint-placeholder-val="{{false}}">
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start">
+      <sc-for list="{{columns}}" as="c" hint-placeholder-count="3">
+        <div style="background:var(--soft);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;min-height:200px">
+          <div style="display:flex;align-items:center;gap:8px;padding:4px 6px"><span style="width:8px;height:8px;border-radius:50%;background:{{c.color}}"></span><span style="font-weight:500">{{c.title}}</span><span style="color:var(--ink3)">{{c.count}}</span></div>
+          <sc-for list="{{c.items}}" as="k" hint-placeholder-count="2">
+            <div onClick="{{k.onClick}}" style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;cursor:pointer" style-hover="border-color:var(--ink3)">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px"><span style="padding:2px 7px;border-radius:4px;background:var(--soft);color:var(--ink2)">{{k.dir}}</span><span style="padding:2px 7px;border-radius:4px;background:{{k.prioBg}};color:{{k.prioFg}}">{{k.prio}}</span></div>
+              <div style="font-weight:500;text-wrap:pretty">{{k.title}}</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px">
+                <span style="display:flex;align-items:center;gap:6px;color:var(--ink2)"><span style="width:20px;height:20px;border-radius:50%;background:{{k.color}};color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{k.ini}}</span>{{k.ownerShort}}</span>
+                <span style="color:{{k.dueColor}};text-align:right">{{k.dueLabel}}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{isList}}" hint-placeholder-val="{{false}}">
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto">
+      <div style="display:grid;min-width:920px;grid-template-columns:minmax(0,2.4fr) 160px 110px 100px 150px 120px;gap:16px;padding:10px 18px;font-size:12px;color:var(--ink3);border-bottom:1px solid var(--line)"><div>Поручение</div><div>Ответственный</div><div>Направление</div><div>Срок</div><div>Осталось</div><div>Статус</div></div>
+      <sc-if value="{{noFlat}}" hint-placeholder-val="{{false}}"><div style="padding:20px 18px;color:var(--ink2)">Поручений не найдено.</div></sc-if>
+      <sc-for list="{{flatTasks}}" as="k" hint-placeholder-count="6">
+        <div onClick="{{k.onClick}}" style="display:grid;min-width:920px;grid-template-columns:minmax(0,2.4fr) 160px 110px 100px 150px 120px;gap:16px;padding:13px 18px;align-items:center;border-bottom:1px solid var(--line);cursor:pointer" style-hover="background:var(--soft)">
+          <div style="min-width:0"><div style="font-weight:500">{{k.title}}</div><div style="font-size:12px;color:var(--ink3)">{{k.meeting}}</div></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:50%;background:{{k.color}};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{k.ini}}</span>{{k.ownerShort}}</div>
+          <div style="color:var(--ink2)">{{k.dir}}</div>
+          <div>{{k.dueFmt}}</div>
+          <div style="color:{{k.dueColor}}">{{k.dueLabel}}</div>
+          <div><span style="height:24px;padding:0 10px;border-radius:12px;background:{{k.sBg}};color:{{k.sFg}};font-size:12px;font-weight:500;display:inline-flex;align-items:center">{{k.sLabel}}</span></div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{isPeople}}" hint-placeholder-val="{{false}}">
+<div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div><h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em">{{t.people}}</h1><div style="color:var(--ink2);margin-top:4px;max-width:640px;text-wrap:pretty">Участники собираются из протоколов: имена говорящих определяются по обращениям в речи и могут быть исправлены вручную в протоколе. Узнавание по голосовому профилю (тембру) — в разработке.</div></div>
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto">
+    <div style="display:grid;min-width:820px;grid-template-columns:minmax(0,2fr) 90px 100px 110px 220px;gap:16px;padding:10px 18px;font-size:12px;color:var(--ink3);border-bottom:1px solid var(--line)"><div>Участник</div><div>Языки</div><div>Совещаний</div><div>Поручений</div><div>Голосовой профиль</div></div>
+    <sc-if value="{{noPeople}}" hint-placeholder-val="{{false}}"><div style="padding:20px 18px;color:var(--ink2)">Участники появятся после обработки первого совещания.</div></sc-if>
+    <sc-for list="{{people}}" as="p" hint-placeholder-count="6">
+      <div style="display:grid;min-width:820px;grid-template-columns:minmax(0,2fr) 90px 100px 110px 220px;gap:16px;padding:14px 18px;align-items:center;border-bottom:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:12px;min-width:0"><span style="width:34px;height:34px;border-radius:50%;background:{{p.color}};color:#fff;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{p.ini}}</span><div style="min-width:0"><div style="font-weight:500">{{p.name}}</div><div style="font-size:12px;color:var(--ink2)">{{p.pos}}</div></div></div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink2)">{{p.langs}}</div>
+        <div>{{p.meetings}}</div>
+        <div>{{p.open}}</div>
+        <div>
+          <sc-if value="{{p.ready}}" hint-placeholder-val="{{false}}"><span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ok)"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Образец сохранён</span></sc-if>
+          <sc-if value="{{p.missing}}" hint-placeholder-val="{{true}}"><span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink3)"><span style="width:6px;height:6px;border-radius:50%;background:var(--line)"></span>Нет образца</span></sc-if>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isNotif}}" hint-placeholder-val="{{false}}">
+<div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap"><div><h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em">{{t.notif}}</h1><div style="color:var(--ink2);margin-top:4px">Напоминания о сроках и рассылки выдержек</div></div><button onClick="{{markRead}}" style="height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer">Отметить все прочитанными</button></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start">
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto">
+      <sc-if value="{{noNotifs}}" hint-placeholder-val="{{false}}"><div style="padding:20px 18px;color:var(--ink2);font-size:13px">Уведомлений пока нет. Задайте демо-дату справа и запустите проверку сроков.</div></sc-if>
+      <sc-for list="{{notifs}}" as="n" hint-placeholder-count="5">
+        <div onClick="{{n.onClick}}" style="display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line);cursor:pointer" style-hover="background:var(--soft)">
+          <span style="width:8px;height:8px;margin-top:6px;border-radius:50%;background:{{n.dot}}"></span>
+          <div style="display:flex;flex-direction:column;gap:3px;min-width:0"><div style="font-weight:{{n.fw}}">{{n.title}}</div><div style="font-size:13px;color:var(--ink2);text-wrap:pretty">{{n.text}}</div><div style="font-size:12px;color:var(--ink3)">{{n.channel}}</div></div>
+          <div style="font-size:12px;color:var(--ink3);white-space:nowrap">{{n.time}}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div style="font-weight:500">Демо: текущая дата</div><span style="font-size:12px;color:var(--ink3)">сейчас {{todayLabel}}</span></div>
+        <div style="font-size:12px;color:var(--ink3);text-wrap:pretty">Сдвиньте «сегодня» вперёд, чтобы проверить напоминания о приближающихся и просроченных сроках.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input type="{{dateType}}" value="{{demoDate}}" onChange="{{onDemoDate}}" style="height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;outline:none">
+          <button onClick="{{runDemo}}" style="flex:1;height:34px;padding:0 12px;border-radius:8px;border:none;background:var(--inv);color:var(--invInk);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap">Проверить сроки</button>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-weight:500">Правила напоминаний</div>
+        <sc-for list="{{rules}}" as="r" hint-placeholder-count="4">
+          <div onClick="{{r.onClick}}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer"><span style="font-size:13px;text-wrap:pretty">{{r.label}}</span><span style="width:34px;height:20px;border-radius:10px;background:{{r.bg}};display:flex;justify-content:{{r.jc}};padding:2px;flex-shrink:0;transition:background .2s"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span></div>
+        </sc-for>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-weight:500">Каналы</div>
+        <sc-for list="{{channels}}" as="r" hint-placeholder-count="3">
+          <div onClick="{{r.onClick}}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer"><span style="font-size:13px">{{r.label}}</span><span style="width:34px;height:20px;border-radius:10px;background:{{r.bg}};display:flex;justify-content:{{r.jc}};padding:2px;flex-shrink:0;transition:background .2s"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span></div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isSettings}}" hint-placeholder-val="{{false}}">
+<div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap"><div><h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em">{{t.settings}}</h1><div style="color:var(--ink2);margin-top:4px">Развёртывание, модели и защита данных</div></div><button onClick="{{wz.openIt}}" style="height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;cursor:pointer">Мастер настройки</button></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px">
+    <div style="grid-column:1/-1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div><div style="font-weight:500">ИИ для поручений и саммари</div><div style="font-size:12px;color:var(--ink3);margin-top:2px;max-width:720px;text-wrap:pretty">Распознавание речи и диаризация всегда выполняются локально. Здесь выбирается языковая модель, которая по тексту транскрипта выделяет поручения, ответственных, сроки и пишет саммари.</div></div>
+        <span style="font-size:12px;padding:3px 9px;border-radius:10px;background:{{llm.badgeBg}};color:{{llm.badgeFg}};font-weight:500;white-space:nowrap">{{llm.badge}}</span>
+      </div>
+      <div style="display:flex;padding:3px;border-radius:9px;background:var(--soft);gap:2px;max-width:460px">
+        <sc-for list="{{llmTabs}}" as="o" hint-placeholder-count="2"><button onClick="{{o.onClick}}" style="flex:1;height:32px;border:none;border-radius:7px;background:{{o.bg}};color:{{o.fg}};font-size:13px;font-weight:500;cursor:pointer">{{o.label}}</button></sc-for>
+      </div>
+      <sc-if value="{{llm.isOllama}}" hint-placeholder-val="{{true}}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)">Модель Ollama
+            <select key="{{llm.selKey}}" onChange="{{llm.onOllamaModel}}" style="height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;outline:none;width:100%;cursor:pointer">
+              <sc-for list="{{llm.ollamaOpts}}" as="o" hint-placeholder-count="2"><option value="{{o.v}}" selected="{{o.sel}}">{{o.l}}</option></sc-for>
+            </select>
+          </label>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)">Сервер<div style="height:36px;display:flex;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink)">{{llm.ollamaUrl}}</div></div>
+        </div>
+        <div style="font-size:12px;color:var(--ok)">● Закрытый контур: аудио и текст не покидают сервер</div>
+      </sc-if>
+      <sc-if value="{{llm.isOpenai}}" hint-placeholder-val="{{false}}">
+        <div style="padding:10px 14px;border-radius:9px;background:var(--warnSoft);font-size:13px;color:var(--ink);text-wrap:pretty">Текст транскрипта будет отправляться во внешний API. Для OpenAI это выход за закрытый контур — используйте только для несекретных совещаний. Аудио по-прежнему обрабатывается локально. Подходит и свой OpenAI-совместимый сервер (например, vLLM в контуре заказчика) — укажите его адрес.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)">Адрес API (base URL)<input value="{{llm.baseUrl}}" onChange="{{llm.onBase}}" style="height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;outline:none;width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px"></label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)">API-ключ<input type="password" autocomplete="off" value="{{llm.key}}" onChange="{{llm.onKey}}" placeholder="{{llm.keyPh}}" style="height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;outline:none;width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px"></label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)">Модель<input list="hs-llm-models" value="{{llm.oaModel}}" onChange="{{llm.onOaModel}}" style="height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;outline:none;width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px"></label>
+        </div>
+        <datalist id="hs-llm-models"><sc-for list="{{llm.oaOpts}}" as="o" hint-placeholder-count="0"><option value="{{o}}"></option></sc-for></datalist>
+        <div style="font-size:12px;color:var(--ink3)">Ключ хранится только на этом сервере (data/hatshy.db) и не возвращается в браузер. Можно также задать переменную окружения OPENAI_API_KEY.</div>
+      </sc-if>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button onClick="{{llm.test}}" style="height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;cursor:pointer">Проверить подключение</button>
+        <button onClick="{{llm.save}}" style="height:34px;padding:0 16px;border-radius:8px;border:none;background:var(--inv);color:var(--invInk);font-size:13px;font-weight:500;cursor:pointer">Сохранить</button>
+        <span style="font-size:13px;color:{{llm.msgColor}};text-wrap:pretty">{{llm.msg}}</span>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:500">Контур развёртывания</div><span style="font-size:12px;padding:3px 9px;border-radius:10px;background:var(--okSoft);color:var(--ok);font-weight:500">On-premise</span></div>
+      <sc-for list="{{infra}}" as="r" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--line)"><span style="color:var(--ink2)">{{r.k}}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right">{{r.v}}</span></div></sc-for>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-weight:500">Локальные модели</div>
+      <sc-for list="{{models}}" as="r" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--line)"><div><div>{{r.k}}</div><div style="font-size:12px;color:var(--ink3)">{{r.d}}</div></div><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right">{{r.v}}</span></div></sc-for>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-weight:500">Приватность</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-size:13px">Внешние облачные API</div><div style="font-size:12px;color:var(--ink3)">{{extApi.d}}</div></div><span style="font-size:12px;color:{{extApi.color}}">{{extApi.label}}</span></div>
+      <sc-for list="{{privacy}}" as="r" hint-placeholder-count="1">
+        <div onClick="{{r.onClick}}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer"><div><div style="font-size:13px">{{r.label}}</div><div style="font-size:12px;color:var(--ink3)">{{r.d}}</div></div><span style="width:34px;height:20px;border-radius:10px;background:{{r.bg}};display:flex;justify-content:{{r.jc}};padding:2px;flex-shrink:0"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span></div>
+      </sc-for>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-size:13px">Хранение аудио</div><div style="font-size:12px;color:var(--ink3)">Только на этом сервере, удаляется вместе с совещанием</div></div><span style="font-size:12px;color:var(--ink2);font-family:'IBM Plex Mono',monospace">data/uploads</span></div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-weight:500">Интеграции</div>
+      <sc-for list="{{integrations}}" as="r" hint-placeholder-count="4">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--line)"><div><div style="font-size:13px">{{r.k}}</div><div style="font-size:12px;color:var(--ink3)">{{r.d}}</div></div><button onClick="{{r.onClick}}" style="height:28px;padding:0 12px;border-radius:7px;border:1px solid var(--line);background:{{r.bg}};color:{{r.fg}};font-size:12px;cursor:pointer;white-space:nowrap">{{r.btn}}</button></div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+</main>
+
+<sc-if value="{{hasTask}}" hint-placeholder-val="{{false}}">
+  <div onClick="{{closeTask}}" style="position:fixed;inset:0;background:var(--shade);z-index:20"></div>
+  <div style="position:fixed;top:0;right:0;bottom:0;width:480px;max-width:100%;background:var(--surface);border-left:1px solid var(--line);z-index:21;display:flex;flex-direction:column;animation:hin .25s ease">
+    <div style="padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--ink3);font-family:'IBM Plex Mono',monospace">ПОРУЧЕНИЕ № {{task.num}}</span><button onClick="{{closeTask}}" style="width:30px;height:30px;border-radius:8px;border:none;background:var(--soft);color:var(--ink);cursor:pointer">✕</button></div>
+    <div style="flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:6px;font-size:12px;flex-wrap:wrap"><span style="padding:2px 8px;border-radius:4px;background:{{task.sBg}};color:{{task.sFg}};font-weight:500">{{task.sLabel}}</span><span style="padding:2px 8px;border-radius:4px;background:var(--soft);color:var(--ink2)">{{task.dir}}</span><span style="padding:2px 8px;border-radius:4px;background:{{task.prioBg}};color:{{task.prioFg}}">{{task.prio}} срочность</span><sc-if value="{{task.unconfirmed}}" hint-placeholder-val="{{false}}"><span style="padding:2px 8px;border-radius:4px;background:var(--warnSoft);color:var(--warn)">Ожидает подтверждения</span></sc-if></div>
+        <div style="font-size:20px;font-weight:600;letter-spacing:-0.01em;text-wrap:pretty">{{task.title}}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:120px 1fr;gap:12px 16px;font-size:14px">
+        <span style="color:var(--ink2)">Ответственный</span><span style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:50%;background:{{task.color}};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{task.ini}}</span>{{task.ownerName}}</span>
+        <sc-if value="{{task.hasCo}}" hint-placeholder-val="{{false}}"><span style="color:var(--ink2)">Соисполнители</span><span>{{task.coLabel}}</span></sc-if>
+        <span style="color:var(--ink2)">Поручил</span><span>{{task.issuedBy}}</span>
+        <span style="color:var(--ink2)">Срок</span><span>{{task.dueFull}} · <span style="color:{{task.dueColor}}">{{task.dueLabel}}</span></span>
+        <span style="color:var(--ink2)">Источник</span><span>{{task.meeting}}</span>
+      </div>
+      <div style="padding:14px 16px;border-radius:10px;background:var(--soft);display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink3)"><span>Фрагмент стенограммы · {{task.t}}</span><span>уверенность ИИ · {{task.conf}}%</span></div>
+        <div style="font-size:14px;line-height:1.55;text-wrap:pretty">«{{task.quote}}»</div>
+        <sc-if value="{{task.hasFragment}}" hint-placeholder-val="{{true}}"><button onClick="{{openFragment}}" style="align-self:flex-start;border:none;background:none;padding:0;color:var(--ink);font-size:13px;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:3px">Открыть в протоколе</button></sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Статус</div>
+        <div style="display:flex;padding:3px;border-radius:9px;background:var(--soft);gap:2px">
+          <sc-for list="{{statusOpts}}" as="o" hint-placeholder-count="2"><button onClick="{{o.onClick}}" style="flex:1;height:32px;border:none;border-radius:7px;background:{{o.bg}};color:{{o.fg}};font-size:13px;font-weight:500;cursor:pointer">{{o.label}}</button></sc-for>
+        </div>
+        <sc-if value="{{task.unconfirmed}}" hint-placeholder-val="{{false}}"><button onClick="{{task.confirm}}" style="height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;cursor:pointer" style-hover="background:var(--soft)">Подтвердить поручение</button></sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">История</div>
+        <sc-for list="{{task.history}}" as="h" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:12px;font-size:13px"><span style="width:7px;height:7px;margin-top:6px;border-radius:50%;background:var(--ink3)"></span><span style="text-wrap:pretty">{{h.x}}</span><span style="color:var(--ink3);white-space:nowrap">{{h.d}}</span></div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="padding:16px 22px;border-top:1px solid var(--line);display:flex;gap:8px">
+      <button onClick="{{remindNow}}" style="flex:1;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:500;cursor:pointer">Напомнить сейчас</button>
+      <button onClick="{{sendSed}}" style="flex:1;height:38px;border-radius:9px;border:none;background:var(--inv);color:var(--invInk);font-weight:500;cursor:pointer">Отправить в СЭД</button>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{isNew}}" hint-placeholder-val="{{false}}">
+  <div style="position:fixed;inset:0;background:var(--shade);z-index:30;display:flex;align-items:center;justify-content:center;padding:20px">
+    <div style="width:560px;max-width:100%;max-height:94vh;overflow-y:auto;background:var(--surface);border-radius:16px;border:1px solid var(--line);display:flex;flex-direction:column;animation:hin .25s ease">
+      <div style="padding:20px 24px 0;display:flex;justify-content:space-between;align-items:center"><div style="font-size:18px;font-weight:600">{{t.newMeeting}}</div><button onClick="{{closeModal}}" style="width:30px;height:30px;border-radius:8px;border:none;background:var(--soft);color:var(--ink);cursor:pointer">✕</button></div>
+      <div style="padding:16px 24px 0"><div style="display:flex;padding:3px;border-radius:9px;background:var(--soft);gap:2px">
+        <sc-for list="{{newTabs}}" as="o" hint-placeholder-count="3"><button onClick="{{o.onClick}}" style="flex:1;height:32px;border:none;border-radius:7px;background:{{o.bg}};color:{{o.fg}};font-size:13px;font-weight:500;cursor:pointer">{{o.label}}</button></sc-for>
+      </div></div>
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)">Название совещания<input value="{{mtitle}}" onChange="{{onTitle}}" placeholder="{{titlePh}}" style="height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;outline:none"></label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)">Участники (через запятую)<input value="{{mpart}}" onChange="{{onPart}}" placeholder="Необязательно: помогает подписать говорящих" style="height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;outline:none"></label>
+        <sc-if value="{{tabConf}}" hint-placeholder-val="{{true}}">
+          <div style="padding:14px 16px;border-radius:10px;background:var(--soft);font-size:13px;color:var(--ink2);line-height:1.5;text-wrap:pretty">Zoom, Teams, Google Meet: звук конференции захватывается локально через системное аудиоустройство (например, <span style="font-family:'IBM Plex Mono',monospace;color:var(--ink)">BlackHole</span>) — бот в конференцию не подключается. Выведите звук созвона в это устройство и выберите его ниже.</div>
+        </sc-if>
+        <sc-if value="{{tabMic}}" hint-placeholder-val="{{false}}">
+          <div style="padding:18px;border-radius:10px;background:var(--soft);display:flex;align-items:center;gap:14px"><span style="width:40px;height:40px;border-radius:50%;background:var(--accent);flex-shrink:0"></span><div><div style="font-weight:500">Микрофон конференц-зала</div><div style="font-size:13px;color:var(--ink2)">{{deviceLabel}}</div></div></div>
+        </sc-if>
+        <sc-if value="{{tabRec}}" hint-placeholder-val="{{true}}">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)">Аудиоустройство
+            <select value="{{deviceId}}" onChange="{{onDevice}}" style="height:40px;padding:0 8px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;outline:none">
+              <sc-for list="{{devOpts}}" as="o" hint-placeholder-count="2"><option value="{{o.v}}">{{o.l}}</option></sc-for>
+            </select>
+          </label>
+          <sc-if value="{{needDevAccess}}" hint-placeholder-val="{{false}}"><button onClick="{{askDevices}}" style="align-self:flex-start;height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;cursor:pointer" style-hover="background:var(--soft)">Разрешить доступ и показать устройства</button></sc-if>
+        </sc-if>
+        <sc-if value="{{tabFile}}" hint-placeholder-val="{{false}}">
+          <input type="file" ref="{{fileRef}}" accept="audio/*,video/*,.mp3,.wav,.m4a,.mp4,.ogg,.oga,.opus,.webm,.flac,.aac" onChange="{{onFile}}" style="display:none">
+          <sc-if value="{{noFile}}" hint-placeholder-val="{{true}}">
+            <div onClick="{{pickFile}}" onDragOver="{{onDragOver}}" onDragLeave="{{onDragLeave}}" onDrop="{{onDrop}}" style="height:150px;border-radius:12px;border:1.5px dashed {{dropBorder}};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;background:var(--bg)" style-hover="border-color:var(--ink3)">
+              <div style="font-weight:500">Перетащите аудио или видео</div><div style="font-size:13px;color:var(--ink2)">MP3, WAV, M4A, MP4, OGG · или нажмите, чтобы выбрать</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{hasFile}}" hint-placeholder-val="{{false}}">
+            <div style="padding:14px 16px;border-radius:10px;border:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span style="font-family:'IBM Plex Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{fileName}}</span><span style="color:var(--ink2);white-space:nowrap">{{fileSize}} · {{upload}}%</span></div>
+              <div style="height:4px;border-radius:2px;background:var(--soft)"><div style="height:4px;border-radius:2px;background:var(--inv);width:{{upload}}%;transition:width .5s"></div></div>
+              <sc-if value="{{canChangeFile}}" hint-placeholder-val="{{true}}"><button onClick="{{clearFile}}" style="align-self:flex-start;border:none;background:none;padding:0;color:var(--ink2);font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:3px">Выбрать другой файл</button></sc-if>
+            </div>
+          </sc-if>
+        </sc-if>
+        <div onClick="{{toggleNotify}}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;padding-top:4px"><div><div style="font-size:14px">Уведомить участников о записи</div><div style="font-size:12px;color:var(--ink3)">{{notifyHint}}</div></div><span style="width:34px;height:20px;border-radius:10px;background:{{notifyBg}};display:flex;justify-content:{{notifyJc}};padding:2px;flex-shrink:0"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span></div>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <span style="font-size:12px;color:var(--ink3)">Распознавание: RU · KZ · смешанная речь</span>
+        <button onClick="{{startAction}}" style="height:40px;padding:0 18px;border-radius:9px;border:none;background:var(--accent);color:#fff;font-weight:500;cursor:pointer;opacity:{{startOpacity}};white-space:nowrap">{{startLabel}}</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{isExport}}" hint-placeholder-val="{{false}}">
+  <div style="position:fixed;inset:0;background:var(--shade);z-index:30;display:flex;align-items:center;justify-content:center;padding:20px">
+    <div style="width:760px;max-width:100%;background:var(--surface);border-radius:16px;border:1px solid var(--line);display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));overflow:hidden;max-height:92vh;overflow-y:auto;animation:hin .25s ease">
+      <div style="padding:22px 24px;display:flex;flex-direction:column;gap:18px">
+        <div style="font-size:18px;font-weight:600">Экспорт протокола</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <sc-for list="{{fmts}}" as="f" hint-placeholder-count="2">
+            <button onClick="{{f.onClick}}" style="padding:14px;border-radius:10px;border:1.5px solid {{f.border}};background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;font-family:'IBM Plex Mono',monospace">{{f.label}}</span><span style="font-size:12px;color:var(--ink2)">{{f.d}}</span></button>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Разделы</div>
+          <sc-for list="{{sections}}" as="s" hint-placeholder-count="5">
+            <div onClick="{{s.onClick}}" style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px"><span style="width:18px;height:18px;border-radius:5px;border:1.5px solid {{s.border}};background:{{s.bg}};color:var(--invInk);font-size:11px;display:flex;align-items:center;justify-content:center">{{s.mark}}</span>{{s.label}}</div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Защита данных</div>
+          <div onClick="{{anonRow.onClick}}" style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px"><span style="width:18px;height:18px;border-radius:5px;border:1.5px solid {{anonRow.border}};background:{{anonRow.bg}};color:var(--invInk);font-size:11px;display:flex;align-items:center;justify-content:center">{{anonRow.mark}}</span>Анонимизировать ФИО</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button onClick="{{closeModal}}" style="height:40px;padding:0 16px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer">Отмена</button>
+          <button onClick="{{doExport}}" style="flex:1;height:40px;border-radius:9px;border:none;background:var(--inv);color:var(--invInk);font-weight:500;cursor:pointer">Скачать {{exportName}}</button>
+        </div>
+      </div>
+      <div style="background:var(--soft);padding:22px;display:flex;align-items:center;justify-content:center">
+        <div style="width:100%;aspect-ratio:1/1.414;background:#fff;color:#222;border-radius:4px;box-shadow:0 4px 18px oklch(0.2 0.01 250 / 0.12);padding:18px 16px;display:flex;flex-direction:column;gap:7px;font-size:7px;line-height:1.4;overflow:hidden">
+          <div style="font-weight:600;font-size:9px;text-align:center">ПРОТОКОЛ СОВЕЩАНИЯ № {{pv.num}}</div>
+          <div style="text-align:center;color:#666">{{pv.title}} · {{pv.date}}</div>
+          <div style="height:1px;background:#ddd;margin:3px 0"></div>
+          <sc-if value="{{pv.summary}}" hint-placeholder-val="{{true}}">
+            <div style="font-weight:600">Краткое содержание</div>
+            <div style="height:4px;background:#e8e8e8;border-radius:1px"></div><div style="height:4px;background:#e8e8e8;border-radius:1px;width:88%"></div><div style="height:4px;background:#e8e8e8;border-radius:1px;width:70%"></div>
+          </sc-if>
+          <sc-if value="{{pv.tasks}}" hint-placeholder-val="{{true}}">
+            <div style="font-weight:600;margin-top:4px">Поручения</div>
+            <div style="display:grid;grid-template-columns:0.6fr 3fr 1.5fr 1fr;gap:2px;font-size:6px"><span style="background:#eee;padding:2px">№</span><span style="background:#eee;padding:2px">Поручение</span><span style="background:#eee;padding:2px">Отв.</span><span style="background:#eee;padding:2px">Срок</span>
+              <sc-for list="{{pv.rows}}" as="r" hint-placeholder-count="3"><span style="padding:2px">{{r.n}}</span><span style="padding:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">{{r.title}}</span><span style="padding:2px;overflow:hidden;white-space:nowrap">{{r.owner}}</span><span style="padding:2px">{{r.due}}</span></sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{pv.transcript}}" hint-placeholder-val="{{true}}">
+            <div style="font-weight:600;margin-top:4px">Стенограмма</div>
+            <div style="height:4px;background:#e8e8e8;border-radius:1px"></div><div style="height:4px;background:#e8e8e8;border-radius:1px;width:92%"></div><div style="height:4px;background:#e8e8e8;border-radius:1px;width:80%"></div><div style="height:4px;background:#e8e8e8;border-radius:1px;width:86%"></div>
+          </sc-if>
+          <sc-if value="{{pv.people}}" hint-placeholder-val="{{true}}">
+            <div style="font-weight:600;margin-top:4px">Участники</div>
+            <div style="height:4px;background:#e8e8e8;border-radius:1px;width:60%"></div>
+          </sc-if>
+          <sc-if value="{{pv.sign}}" hint-placeholder-val="{{true}}">
+            <div style="margin-top:auto;display:flex;justify-content:space-between;color:#666"><span>Председатель ________</span><span>Секретарь ________</span></div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{wz.open}}" hint-placeholder-val="{{false}}">
+  <div style="position:fixed;inset:0;background:var(--shade);z-index:35;display:flex;align-items:center;justify-content:center;padding:20px">
+    <div style="width:660px;max-width:100%;max-height:92vh;overflow-y:auto;background:var(--surface);border-radius:16px;border:1px solid var(--line);display:flex;flex-direction:column;animation:hin .25s ease">
+      <div style="padding:20px 24px 0;display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:26px;height:26px;border-radius:7px;background:var(--inv);display:flex;align-items:center;justify-content:center"><div style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></div></div><div style="font-size:18px;font-weight:600">Мастер настройки</div></div>
+        <span style="font-size:12px;color:var(--ink3);font-family:'IBM Plex Mono',monospace">ШАГ {{wz.n}} / 4</span>
+      </div>
+      <div style="padding:14px 24px 0;display:flex;gap:6px"><sc-for list="{{wz.dots}}" as="d" hint-placeholder-count="4"><span style="flex:1;height:4px;border-radius:2px;background:{{d.bg}};transition:background .3s"></span></sc-for></div>
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px;min-height:300px">
+        <sc-if value="{{wz.s0}}" hint-placeholder-val="{{true}}">
+          <div style="font-size:22px;font-weight:600;letter-spacing:-0.01em">Добро пожаловать в AI Hatshy</div>
+          <div style="color:var(--ink2);text-wrap:pretty">ИИ-секретарь совещаний: запись → транскрипт с говорящими → поручения с ответственными и сроками → протокол PDF/DOCX и напоминания. Мастер скачает локальные модели и настроит ИИ — это нужно один раз.</div>
+          <sc-for list="{{wz.features}}" as="f" hint-placeholder-count="3">
+            <div style="display:flex;gap:12px;padding:12px 14px;border-radius:10px;background:var(--soft)"><span style="width:8px;height:8px;margin-top:7px;border-radius:50%;background:{{f.c}};flex-shrink:0"></span><div><div style="font-weight:500">{{f.t}}</div><div style="font-size:13px;color:var(--ink2)">{{f.d}}</div></div></div>
+          </sc-for>
+          <div style="font-size:12px;color:var(--ink3)">Свободно на диске: {{wz.disk}} ГБ · нужно ~0,7 ГБ для моделей распознавания и 2–10 ГБ для локальной LLM</div>
+        </sc-if>
+        <sc-if value="{{wz.s1}}" hint-placeholder-val="{{false}}">
+          <div style="font-size:18px;font-weight:600">Модели распознавания и диаризации</div>
+          <div style="font-size:13px;color:var(--ink2)">Работают на процессоре этого компьютера, без GPU и без интернета после скачивания.</div>
+          <sc-for list="{{wz.comps}}" as="c" hint-placeholder-count="3">
+            <div style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:12px;border:1px solid var(--line)">
+              <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+                <div style="min-width:0"><div style="font-weight:500">{{c.title}}</div><div style="font-size:12px;color:var(--ink2);text-wrap:pretty">{{c.desc}}</div></div>
+                <div style="flex-shrink:0;text-align:right;font-size:12px">
+                  <sc-if value="{{c.ok}}" hint-placeholder-val="{{false}}"><span style="color:var(--ok);font-weight:500">✓ Установлено</span></sc-if>
+                  <sc-if value="{{c.canGet}}" hint-placeholder-val="{{true}}"><button onClick="{{c.get}}" style="height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12px;cursor:pointer">Скачать · {{c.size}}</button></sc-if>
+                  <sc-if value="{{c.busy}}" hint-placeholder-val="{{false}}"><span style="font-family:'IBM Plex Mono',monospace;color:var(--ink2)">{{c.pct}}%</span></sc-if>
+                </div>
+              </div>
+              <sc-if value="{{c.busy}}" hint-placeholder-val="{{false}}"><div style="height:4px;border-radius:2px;background:var(--soft)"><div style="height:4px;border-radius:2px;background:var(--inv);width:{{c.pct}}%;transition:width .5s"></div></div></sc-if>
+              <sc-if value="{{c.err}}" hint-placeholder-val="{{false}}"><div style="font-size:12px;color:var(--accent)">{{c.error}}</div></sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{wz.needModels}}" hint-placeholder-val="{{false}}"><button onClick="{{wz.getAll}}" style="align-self:flex-start;height:38px;padding:0 18px;border-radius:9px;border:none;background:var(--inv);color:var(--invInk);font-weight:500;cursor:pointer">Скачать всё</button></sc-if>
+        </sc-if>
+        <sc-if value="{{wz.s2}}" hint-placeholder-val="{{false}}">
+          <div style="font-size:18px;font-weight:600">ИИ для поручений и саммари</div>
+          <div style="font-size:13px;color:var(--ink2);text-wrap:pretty">Языковая модель читает транскрипт и выделяет поручения, ответственных, сроки и саммари. Рекомендуем локальную модель — данные не покидают компьютер.</div>
+          <div style="display:flex;padding:3px;border-radius:9px;background:var(--soft);gap:2px">
+            <sc-for list="{{llmTabs}}" as="o" hint-placeholder-count="2"><button onClick="{{o.onClick}}" style="flex:1;height:32px;border:none;border-radius:7px;background:{{o.bg}};color:{{o.fg}};font-size:13px;font-weight:500;cursor:pointer">{{o.label}}</button></sc-for>
+          </div>
+          <sc-if value="{{llm.isOllama}}" hint-placeholder-val="{{true}}">
+            <div style="font-size:13px;color:{{wz.olColor}}">{{wz.olStatus}}</div>
+            <sc-for list="{{wz.olModels}}" as="m" hint-placeholder-count="3">
+              <div onClick="{{m.pick}}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1.5px solid {{m.border}};cursor:pointer">
+                <div><div style="font-weight:500;font-family:'IBM Plex Mono',monospace;font-size:13px">{{m.name}}</div><div style="font-size:12px;color:var(--ink2)">{{m.note}}</div></div>
+                <div style="font-size:12px;flex-shrink:0;text-align:right">
+                  <sc-if value="{{m.ok}}" hint-placeholder-val="{{false}}"><span style="color:var(--ok)">✓ Установлена</span></sc-if>
+                  <sc-if value="{{m.canPull}}" hint-placeholder-val="{{false}}"><button onClick="{{m.pull}}" style="height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12px;cursor:pointer">Скачать · {{m.size}}</button></sc-if>
+                  <sc-if value="{{m.busy}}" hint-placeholder-val="{{false}}"><span style="font-family:'IBM Plex Mono',monospace;color:var(--ink2)">{{m.pct}}%</span></sc-if>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{wz.pullErr}}" hint-placeholder-val="{{false}}"><div style="font-size:12px;color:var(--accent)">{{wz.pullError}}</div></sc-if>
+          </sc-if>
+          <sc-if value="{{llm.isOpenai}}" hint-placeholder-val="{{false}}">
+            <div style="padding:10px 14px;border-radius:9px;background:var(--warnSoft);font-size:13px;text-wrap:pretty">Текст транскрипта будет отправляться во внешний API. Для OpenAI это выход за закрытый контур. Аудио по-прежнему обрабатывается локально.</div>
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)">API-ключ<input type="password" autocomplete="off" value="{{llm.key}}" onChange="{{llm.onKey}}" placeholder="{{llm.keyPh}}" style="height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none"></label>
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)">Модель<input list="hs-llm-models" value="{{llm.oaModel}}" onChange="{{llm.onOaModel}}" style="height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none"></label>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button onClick="{{llm.test}}" style="height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;cursor:pointer">Проверить подключение</button><span style="font-size:13px;color:{{llm.msgColor}}">{{llm.msg}}</span></div>
+          </sc-if>
+        </sc-if>
+        <sc-if value="{{wz.s3}}" hint-placeholder-val="{{false}}">
+          <div style="font-size:22px;font-weight:600;letter-spacing:-0.01em">{{wz.doneTitle}}</div>
+          <sc-for list="{{wz.checks}}" as="k" hint-placeholder-count="3">
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px"><span>{{k.t}}</span><span style="color:{{k.c}};font-weight:500">{{k.v}}</span></div>
+          </sc-for>
+          <div style="font-size:13px;color:var(--ink2);text-wrap:pretty">Дальше: «Новое совещание» → загрузите запись (например, samples/shala_meeting.mp3) или начните запись в зале. Мастер можно открыть снова в «Настройках».</div>
+        </sc-if>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <button onClick="{{wz.skip}}" style="border:none;background:none;color:var(--ink3);font-size:13px;cursor:pointer">Пропустить</button>
+        <div style="display:flex;gap:8px">
+          <sc-if value="{{wz.canBack}}" hint-placeholder-val="{{false}}"><button onClick="{{wz.back}}" style="height:38px;padding:0 16px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:500;cursor:pointer">Назад</button></sc-if>
+          <button onClick="{{wz.next}}" style="height:38px;padding:0 18px;border-radius:9px;border:none;background:var(--inv);color:var(--invInk);font-weight:500;cursor:pointer">{{wz.nextLabel}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{dlg.open}}" hint-placeholder-val="{{false}}">
+  <div onClick="{{dlg.cancel}}" style="position:fixed;inset:0;background:var(--shade);z-index:45"></div>
+  <div style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:46;width:440px;max-width:calc(100% - 32px);background:var(--surface);border-radius:16px;border:1px solid var(--line);padding:22px 24px;display:flex;flex-direction:column;gap:14px">
+    <div style="font-size:17px;font-weight:600;text-wrap:pretty">{{dlg.title}}</div>
+    <div style="font-size:14px;color:var(--ink2);line-height:1.5;text-wrap:pretty">{{dlg.text}}</div>
+    <sc-if value="{{dlg.hasInput}}" hint-placeholder-val="{{false}}"><input value="{{dlg.value}}" onChange="{{dlg.onInput}}" onKeyDown="{{dlg.onKey}}" style="height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;outline:none"></sc-if>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button onClick="{{dlg.cancel}}" style="height:38px;padding:0 16px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:500;cursor:pointer">Отмена</button>
+      <button onClick="{{dlg.ok}}" style="height:38px;padding:0 18px;border-radius:9px;border:none;background:{{dlg.okBg}};color:{{dlg.okFg}};font-weight:500;cursor:pointer">{{dlg.okLabel}}</button>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+  <div style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:40;padding:12px 18px;border-radius:10px;background:var(--inv);color:var(--invInk);font-size:14px;box-shadow:0 8px 24px oklch(0.2 0.01 250 / 0.2);animation:hin .25s ease;max-width:90vw">{{toast}}</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;lang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ru&quot;,&quot;kk&quot;,&quot;en&quot;],&quot;default&quot;:&quot;ru&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;secretary&quot;,&quot;head&quot;,&quot;executor&quot;],&quot;default&quot;:&quot;secretary&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+/* AI Hatshy — веб-интерфейс, работающий с локальным API (см. CONTRACT.md). ?mock=1 — демо на фикстурах /static/mock/. */
+const MONTHS=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+const MONTHS_G=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MONTHS_N=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const WD=['вс','пн','вт','ср','чт','пт','сб'];
+const MOCK=/[?&]mock=1\b/.test(location.search);
+const STEPS0=['Подготовка аудио','Разделение говорящих','Распознавание речи: RU · KZ · смешанная','Выделение поручений, ответственных и сроков','Формирование сводки и протокола'];
+const I18N={
+ ru:{meetings:'Совещания',tasks:'Поручения',myTasks:'Мои поручения',people:'Участники',notif:'Уведомления',settings:'Настройки',newMeeting:'Новое совещание'},
+ kk:{meetings:'Кеңестер',tasks:'Тапсырмалар',myTasks:'Менің тапсырмаларым',people:'Қатысушылар',notif:'Хабарламалар',settings:'Баптаулар',newMeeting:'Жаңа кеңес'},
+ en:{meetings:'Meetings',tasks:'Action items',myTasks:'My action items',people:'Participants',notif:'Notifications',settings:'Settings',newMeeting:'New meeting'}
+};
+const ROLE_LABEL={secretary:'Секретарь',head:'Руководитель',executor:'Исполнитель'};
+const PRIO={high:['Высокая','var(--accentSoft)','var(--accent)'],mid:['Средняя','var(--warnSoft)','var(--warn)'],low:['Низкая','var(--soft)','var(--ink2)']};
+const col=h=>h==null?'var(--ink3)':`oklch(0.6 0.12 ${h})`;
+const pad=n=>String(n).padStart(2,'0');
+const isoOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse=s=>{if(!s)return null;const p=String(s).slice(0,10).split('-').map(Number);if(p.length<3||p.some(isNaN))return null;return new Date(p[0],p[1]-1,p[2]);};
+const fmtD=d=>`${d.getDate()} ${MONTHS[d.getMonth()]}`;
+const fmtG=d=>`${d.getDate()} ${MONTHS_G[d.getMonth()]}`;
+const pl=(n,f)=>{const a=n%10,b=n%100;if(a===1&&b!==11)return f[0];if(a>=2&&a<=4&&(b<12||b>14))return f[1];return f[2];};
+const plural=n=>pl(n,['день','дня','дней']);
+const tog=on=>({bg:on?'var(--ink)':'var(--line)',jc:on?'flex-end':'flex-start'});
+const secToStr=v=>{const s=Math.max(0,Math.floor(v||0)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?`${h}:${pad(m)}:${pad(x)}`:`${pad(m)}:${pad(x)}`;};
+const tcToSec=t=>{if(!t)return 0;return String(t).split(':').map(Number).reduce((a,b)=>a*60+(b||0),0);};
+const tcShort=t=>t&&String(t).startsWith('00:')?String(t).slice(3):(t||'');
+const ORG_RE=/департамент|отдел|служб|управлени|комитет|бухгалтер|дирекц/i;
+const shortName=n=>{const w=String(n||'').trim().split(/\s+/);if(!n)return '—';if(w.length<2||ORG_RE.test(n)||/\d/.test(w[1]))return n;return `${w[0]} ${w[1][0]}.`;};
+const langsLabel=s=>String(s||'').split(/\s+/).filter(Boolean).map(x=>x==='MIX'?'смешанная речь':x).join(' / ');
+const mostCommon=a=>{const c={};let best=null,bn=0;a.forEach(x=>{if(!x)return;c[x]=(c[x]||0)+1;if(c[x]>bn){bn=c[x];best=x;}});return best;};
+const EMPTY={today:null,meetings:[],tasks:[],people:[],notifications:[],settings:{rules:{},channels:{},infra:[],models:[],privacy:{}}};
+const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+
+async function api(method,path,body){
+  if(MOCK){
+    if(method==='GET'){
+      if(path==='/api/state'){const r=await fetch('/static/mock/state.json');return r.json();}
+      if(/^\/api\/meetings\/\d+$/.test(path)){const r=await fetch('/static/mock/meeting_1.json');const j=await r.json();return {...j,id:Number(path.split('/').pop())};}
+      if(/\/progress$/.test(path))return {status:'done',step:5,pct:100,step_label:'Готово',steps:STEPS0,error:null};
+      return {};
+    }
+    return {ok:true,mock:true,id:1,sent:0,created:0,segments:[]};
+  }
+  const opt={method,headers:{}};
+  if(body instanceof FormData)opt.body=body;
+  else if(body!==undefined){opt.headers['Content-Type']='application/json';opt.body=JSON.stringify(body);}
+  const r=await fetch(path,opt);
+  if(!r.ok){let msg='HTTP '+r.status;try{const j=await r.json();if(j&&j.detail)msg=typeof j.detail==='string'?j.detail:JSON.stringify(j.detail);}catch(e){}throw new Error(msg);}
+  const ct=r.headers.get('content-type')||'';
+  return ct.includes('json')?r.json():{};
+}
+
+class Component extends DCLogic {
+  state={screen:'meetings',meetingId:null,tab:'summary',modal:null,newTab:'conf',mtitle:'',mpart:'',notify:true,file:null,upload:0,uploading:false,dragOver:false,
+    devices:[],deviceId:'',procId:null,procTitle:'',prog:null,
+    live:false,paused:false,sec:0,liveId:null,liveTitle:'',liveSource:'mic',liveDevice:'',liveSegs:[],liveErr:null,liveSent:0,liveNotify:true,stopping:false,
+    taskId:null,taskView:'dash',tf:{dir:'all',owner:'all',prio:'all',due:'all',m:'all'},tq:'',toast:null,fmt:'pdf',
+    secs:{summary:true,tasks:true,transcript:true,people:true,sign:true},anon:false,q:'',mf:'all',hl:null,
+    theme:lsGet('hatshy.theme'),lang:lsGet('hatshy.lang'),role:lsGet('hatshy.role'),
+    data:null,apiErr:null,detail:null,playing:false,acur:0,adur:0,demoDate:'',llmInfo:null,llmForm:null,llmModels:[],llmMsg:null,setup:null,wz:false,wstep:0,dlg:null,repBusy:false};
+  trRef=React.createRef();
+  fileRef=React.createRef();
+  componentDidMount(){
+    this.refresh();
+    this.iv=setInterval(()=>this.tick(),1000);
+    this.sv=setInterval(()=>this.refresh(),5000);
+    this.loadSetup(true);
+    this.su=setInterval(()=>{if(this.state.wz)this.loadSetup(false);},1500);
+    this.onKey=e=>{if(e.key==='Escape'){if(this.state.dlg)this.setState({dlg:null});else if(this.state.taskId!=null)this.setState({taskId:null});else if(this.state.modal&&!this.state.uploading)this.setState({modal:null});}};
+    window.addEventListener('keydown',this.onKey);
+  }
+  componentWillUnmount(){clearInterval(this.iv);clearInterval(this.sv);clearInterval(this.su);clearInterval(this.pp);clearTimeout(this.tt);window.removeEventListener('keydown',this.onKey);if(this.audio)this.audio.pause();}
+  componentDidUpdate(){
+    const s=this.state;
+    if(this.lastSegs!==s.liveSegs){this.lastSegs=s.liveSegs;if(this.trRef.current){const el=this.trRef.current;el.scrollTop=el.scrollHeight;}}
+    if(this.scrollSeg!=null){const el=document.getElementById('seg-'+this.scrollSeg);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});this.scrollSeg=null;}}
+  }
+  tick(){const s=this.state;if(s.live&&!s.paused)this.setState({sec:s.sec+1});}
+  toast(msg){this.setState({toast:msg});clearTimeout(this.tt);this.tt=setTimeout(()=>this.setState({toast:null}),3200);}
+  go(screen){if(this.audio&&!this.audio.paused)this.audio.pause();this.setState({screen,taskId:null});if(screen==='settings')this.loadLlm();}
+  async loadSetup(first){
+    if(MOCK)return;
+    try{const r=await api('GET','/api/setup');this.setState({setup:r});
+      if(first&&!r.onboarded){this.setState({wz:true,wstep:0});this.loadLlm();}}
+    catch(e){}
+  }
+  openWizard(){this.setState({wz:true,wstep:0});this.loadSetup(false);this.loadLlm();}
+  async setupAct(path,body){try{const r=await api('POST',path,body);this.setState({setup:r});}catch(e){this.toast('Ошибка: '+e.message);}}
+  async wizNext(){
+    const s=this.state,st=s.wstep||0;
+    if(st===2){const f=s.llmForm||{};if(f.provider==='openai'&&!f.openai_key&&!(s.llmInfo&&s.llmInfo.key_set)){this.toast('Введите API-ключ или выберите локальную модель');return;}
+      await this.saveLlm();await this.loadSetup(false);}
+    if(st>=3){await this.setupAct('/api/setup/complete',{done:true});this.setState({wz:false});this.toast('Готово! Можно начинать совещание');return;}
+    this.setState({wstep:st+1});
+  }
+  async loadLlm(){
+    try{const r=await api('GET','/api/llm');this.setState({llmInfo:r,llmForm:{provider:r.provider,ollama_model:r.ollama_model,openai_base_url:r.openai_base_url,openai_model:r.openai_model,openai_key:''},llmMsg:null});}
+    catch(e){this.setState({llmMsg:{t:'Не удалось загрузить настройки ИИ: '+e.message,err:true}});}
+  }
+  setLlm(patch){this.setState(st=>({llmForm:{...(st.llmForm||{}),...patch},llmMsg:null}));}
+  async testLlm(){
+    const f=this.state.llmForm||{};this.setState({llmMsg:{t:'Проверяю подключение…'}});
+    try{const r=await api('POST','/api/llm/test',f);
+      this.setState(st=>({llmModels:f.provider==='openai'?(r.models||[]):st.llmModels,
+        llmInfo:f.provider==='ollama'&&r.models&&r.models.length?{...st.llmInfo,ollama_models:r.models}:st.llmInfo,
+        llmMsg:r.ok?{t:`Подключение работает${r.models&&r.models.length?` · моделей доступно: ${r.models.length}`:''}`,ok:true}:{t:r.error||'Ошибка подключения',err:true}}));}
+    catch(e){this.setState({llmMsg:{t:'Ошибка: '+e.message,err:true}});}
+  }
+  async saveLlm(){
+    const f=this.state.llmForm||{};
+    try{const r=await api('POST','/api/llm',f);this.setState(st=>({llmInfo:{...st.llmInfo,...r},llmForm:{...f,openai_key:''},llmMsg:{t:'Сохранено. Новые совещания будут обрабатываться: '+(r.provider==='openai'?`${r.openai_model} (OpenAI API)`:`${r.ollama_model} (Ollama, локально)`),ok:true}}));this.refresh();}
+    catch(e){this.setState({llmMsg:{t:'Ошибка сохранения: '+e.message,err:true}});}
+  }
+
+  async refresh(){
+    try{const d=await api('GET','/api/state');this.fails=0;this.setState(st=>({data:d,apiErr:null,demoDate:st.demoDate||d.today||''}));}
+    catch(e){this.fails=(this.fails||0)+1;if(this.fails>=2||!this.state.data)this.setState({apiErr:e.message||String(e)});}
+  }
+  async loadDetail(id){
+    try{const d=await api('GET',`/api/meetings/${id}`);if(this.state.meetingId===id)this.setState({detail:d});}
+    catch(e){this.toast('Не удалось загрузить протокол: '+e.message);}
+  }
+  openMeeting(m){
+    if(['processing','queued','error'].includes(m.status))this.startProc(m.id,m.title,m);
+    else this.openProtocol(m.id);
+  }
+  openProtocol(id,tab,hl){
+    const keep=this.state.detail&&this.state.detail.id===id;
+    this.setState({screen:'protocol',meetingId:id,tab:tab||'summary',hl:hl==null?null:hl,taskId:null,modal:null,detail:keep?this.state.detail:null});
+    if(hl!=null)this.scrollSeg=hl;
+    this.loadDetail(id);this.setupAudio(id);
+  }
+  setupAudio(id){
+    if(this.audioId===id&&this.audio)return;
+    if(this.audio){this.audio.pause();this.audio.removeAttribute('src');}
+    const a=new Audio();a.preload='metadata';
+    a.addEventListener('timeupdate',()=>this.setState({acur:a.currentTime}));
+    a.addEventListener('loadedmetadata',()=>this.setState({adur:isFinite(a.duration)?a.duration:0}));
+    a.addEventListener('play',()=>this.setState({playing:true}));
+    a.addEventListener('pause',()=>this.setState({playing:false}));
+    a.addEventListener('ended',()=>this.setState({playing:false}));
+    a.addEventListener('error',()=>{if(a.getAttribute('src'))this.audioErr=true;});
+    this.audioErr=false;
+    if(!MOCK)a.src=`/api/meetings/${id}/audio`;
+    this.audio=a;this.audioId=id;this.setState({acur:0,adur:0,playing:false});
+  }
+  togglePlay(){
+    const a=this.audio;if(!a||MOCK||this.audioErr){this.toast('Аудиозапись недоступна');return;}
+    if(a.paused)a.play().catch(()=>this.toast('Не удалось воспроизвести аудио'));else a.pause();
+  }
+  seekTo(sec,play){
+    const a=this.audio;if(!a||MOCK||this.audioErr)return;
+    try{a.currentTime=Math.max(0,sec||0);}catch(e){}
+    this.setState({acur:Math.max(0,sec||0)});
+    if(play!==false&&a.paused)a.play().catch(()=>{});
+  }
+  startProc(id,title,m){
+    clearInterval(this.pp);
+    this.setState({screen:'processing',procId:id,procTitle:title||'Совещание',prog:m?{status:m.status,step:m.step,pct:m.pct,step_label:m.step_label,error:m.error}:null,taskId:null,modal:null});
+    if(m&&m.status==='error')return;
+    this.pollProg();this.pp=setInterval(()=>this.pollProg(),1500);
+  }
+  async pollProg(){
+    const id=this.state.procId;
+    if(this.state.screen!=='processing'){clearInterval(this.pp);return;}
+    try{
+      const p=await api('GET',`/api/meetings/${id}/progress`);
+      if(this.state.procId!==id)return;
+      this.setState({prog:p});
+      if(p.status==='done'||p.status==='review'){clearInterval(this.pp);this.refresh();if(this.state.screen==='processing')this.openProtocol(id);}
+      else if(p.status==='error'){clearInterval(this.pp);}
+    }catch(e){this.setState({prog:{...(this.state.prog||{}),status:'error',error:e.message}});clearInterval(this.pp);}
+  }
+  // --- локальные изменения данных ---
+  applyTask(id,patch){
+    this.setState(st=>{
+      const f=t=>t.id===id?{...t,...patch}:t;
+      const data=st.data?{...st.data,tasks:st.data.tasks.map(f)}:st.data;
+      const detail=st.detail&&st.detail.tasks?{...st.detail,tasks:st.detail.tasks.map(f)}:st.detail;
+      return {data,detail};
+    });
+  }
+  async patchTask(id,body,msg){
+    this.applyTask(id,body);
+    try{const r=await api('PATCH',`/api/tasks/${id}`,body);if(r&&r.id===id)this.applyTask(id,r);if(msg)this.toast(msg);this.refresh();}
+    catch(e){this.toast('Ошибка сохранения: '+e.message);this.refresh();}
+  }
+  async confirmAll(){
+    const id=this.state.meetingId;
+    this.setState(st=>{const f=t=>t.meeting_id===id?{...t,confirmed:true}:t;return {data:st.data?{...st.data,tasks:st.data.tasks.map(f)}:st.data,detail:st.detail&&st.detail.tasks?{...st.detail,tasks:st.detail.tasks.map(f)}:st.detail};});
+    try{await api('POST',`/api/meetings/${id}/confirm_all`);this.toast('Все поручения подтверждены');this.refresh();}
+    catch(e){this.toast('Ошибка: '+e.message);this.refresh();}
+  }
+  async remind(t){
+    try{await api('POST',`/api/tasks/${t.id}/remind`);this.toast(`Напоминание отправлено: ${t.ownerShort}`);this.refresh();}
+    catch(e){this.toast('Ошибка: '+e.message);}
+  }
+  async sendExtracts(){
+    try{const r=await api('POST',`/api/meetings/${this.state.meetingId}/send_extracts`);const n=r.sent||0;
+      this.toast(MOCK?'Демо-режим: рассылка не выполняется':`Выдержки отправлены ${n} ${pl(n,['ответственному','ответственным','ответственным'])} · локальный outbox`);this.refresh();}
+    catch(e){this.toast('Ошибка рассылки: '+e.message);}
+  }
+  ask(o){this.setState({dlg:{value:'',...o}});}
+  deleteMeeting(id,title){
+    this.ask({title:'Удалить совещание?',text:`«${title||''}» — аудио, транскрипт, сводки и поручения будут удалены без возможности восстановления.`,okLabel:'Удалить',danger:true,onOk:()=>this.doDelete(id)});
+  }
+  reprocessMeeting(id,title){
+    this.ask({title:'Переобработать запись?',text:'Распознавание, разделение говорящих, поручения и сводки будут сформированы заново. Подтверждения и статусы поручений этого совещания сбросятся.',okLabel:'Переобработать',
+      onOk:async()=>{try{await api('POST',`/api/meetings/${id}/reprocess`);this.startProc(id,title);this.refresh();}catch(e){this.toast('Не удалось запустить: '+e.message);}}});
+  }
+  async makeReport(id){
+    if(this.state.repBusy)return;
+    this.setState({repBusy:true});
+    try{await api('POST',`/api/meetings/${id}/report`);await this.loadDetail(id);this.toast('Подробная сводка готова');}
+    catch(e){this.toast(e.message);}
+    this.setState({repBusy:false});
+  }
+  async doDelete(id){
+    try{await api('DELETE',`/api/meetings/${id}`);if(this.audio&&this.audioId===id){this.audio.pause();this.audio=null;this.audioId=null;}
+      clearInterval(this.pp);this.setState({screen:'meetings',detail:null,meetingId:null,procId:null});this.toast('Совещание удалено');this.refresh();}
+    catch(e){this.toast('Ошибка удаления: '+e.message);}
+  }
+  async renameSpeaker(sp){
+    if(!sp||sp.id==null){this.toast('Говорящий не найден');return;}
+    this.ask({title:'Имя говорящего',text:'Как подписывать этого участника в транскрипте, поручениях и протоколе.',hasInput:true,value:sp.name||'',okLabel:'Сохранить',
+      onOk:v=>this.doRename(sp,v)});
+  }
+  async doRename(sp,name){
+    if(name==null||!name.trim()||name.trim()===sp.name)return;
+    try{await api('PATCH',`/api/speakers/${sp.id}`,{name:name.trim()});this.toast('Имя говорящего обновлено');this.loadDetail(this.state.meetingId);this.refresh();}
+    catch(e){this.toast('Ошибка: '+e.message);}
+  }
+  async saveSettings(patch,msg){
+    this.setState(st=>st.data?{data:{...st.data,settings:{...st.data.settings,...patch}}}:{});
+    try{const r=await api('POST','/api/settings',patch);if(r&&r.rules)this.setState(st=>({data:{...st.data,settings:r}}));if(msg)this.toast(msg);}
+    catch(e){this.toast('Ошибка сохранения настроек: '+e.message);this.refresh();}
+  }
+  async runDemo(){
+    const d=this.state.demoDate;if(!d){this.toast('Выберите дату');return;}
+    try{await api('POST','/api/settings',{today:d});const r=await api('POST','/api/reminders/run');const n=r.created||0;
+      this.toast(`Текущая дата: ${fmtG(parse(d))}. Создано напоминаний: ${n}`);await this.refresh();}
+    catch(e){this.toast('Ошибка: '+e.message);}
+  }
+  async markRead(){
+    this.setState(st=>st.data?{data:{...st.data,notifications:st.data.notifications.map(n=>({...n,read:true}))}}:{});
+    try{await api('POST','/api/notifications/read_all');}catch(e){this.toast('Ошибка: '+e.message);}
+  }
+  doExport(){
+    const s=this.state,id=s.meetingId;
+    const secs=Object.keys(s.secs).filter(k=>s.secs[k]).join(',');
+    if(!secs){this.toast('Выберите хотя бы один раздел');return;}
+    if(MOCK){this.setState({modal:null});this.toast('Демо-режим: экспорт доступен при работе с сервером');return;}
+    const url=`/api/meetings/${id}/export?fmt=${s.fmt}&sections=${encodeURIComponent(secs)}&anon=${s.anon?1:0}`;
+    const a=document.createElement('a');a.href=url;a.download=`protocol_${id}.${s.fmt}`;document.body.appendChild(a);a.click();a.remove();
+    this.setState({modal:null});this.toast(`Формируется protocol_${id}.${s.fmt}…`);
+  }
+  // --- новое совещание ---
+  openNew(){
+    this.setState({modal:'new',upload:0,uploading:false,file:null,mtitle:'',mpart:'',dragOver:false});
+    this.loadDevices(false);
+  }
+  async loadDevices(ask){
+    const md=navigator.mediaDevices;
+    if(!md||!md.enumerateDevices){return;}
+    try{
+      if(ask){const st=await md.getUserMedia({audio:true});st.getTracks().forEach(t=>t.stop());}
+      const list=(await md.enumerateDevices()).filter(d=>d.kind==='audioinput').map((d,i)=>({id:d.deviceId,label:d.label||`Аудиовход ${i+1}`,named:!!d.label}));
+      this.setState(st=>({devices:list,deviceId:this.pickDevice(list,st.newTab,st.deviceId)}));
+    }catch(e){this.toast('Нет доступа к аудиоустройствам: '+(e.message||e.name));}
+  }
+  pickDevice(list,tab,cur){
+    if(cur&&list.some(d=>d.id===cur)&&!(tab==='conf'&&!/blackhole|loopback|soundflower|stereo mix|vb-audio|cable/i.test((list.find(d=>d.id===cur)||{}).label||'')))return cur;
+    if(tab==='conf'){const b=list.find(d=>/blackhole|loopback|soundflower|stereo mix|vb-audio|cable/i.test(d.label));if(b)return b.id;}
+    const def=list.find(d=>d.id==='default');return def?def.id:(list[0]?list[0].id:'');
+  }
+  async startRec(source){
+    const s=this.state;
+    if(!navigator.mediaDevices||!window.MediaRecorder){this.toast('Браузер не поддерживает запись звука');return;}
+    const title=s.mtitle.trim()||(source==='conf'?'Онлайн-совещание':'Совещание в зале');
+    let stream;
+    try{stream=await navigator.mediaDevices.getUserMedia({audio:s.deviceId?{deviceId:{exact:s.deviceId},echoCancellation:false,noiseSuppression:false,autoGainControl:false}:true});}
+    catch(e){this.toast('Нет доступа к аудиоустройству: '+(e.message||e.name));return;}
+    let id;
+    try{const body={title,notify:s.notify,source};if(s.mpart.trim())body.participants=s.mpart.trim();const r=await api('POST','/api/live/start',body);id=r.id;}
+    catch(e){stream.getTracks().forEach(t=>t.stop());this.toast('Сервер не принял запись: '+e.message);return;}
+    if(s.notify){try{const a=new Audio('/static/consent.mp3');a.play().catch(()=>{});}catch(e){}}
+    let mime='';for(const m of ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus']){if(MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m)){mime=m;break;}}
+    const rec=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
+    this.rec=rec;this.stream=stream;this.chain=Promise.resolve();
+    rec.ondataavailable=e=>{if(!e.data||!e.data.size)return;const blob=e.data;this.chain=this.chain.then(()=>this.sendChunk(id,blob));};
+    rec.start(4000);
+    const dev=s.devices.find(d=>d.id===s.deviceId);
+    this.setState({modal:null,screen:'live',live:true,paused:false,sec:0,liveId:id,liveTitle:title,liveSource:source,liveDevice:dev?dev.label:'устройство по умолчанию',liveSegs:[],liveErr:null,liveSent:0,liveNotify:s.notify,stopping:false,taskId:null});
+    if(s.notify)this.toast('Участники уведомлены о записи');
+  }
+  async sendChunk(id,blob){
+    const fd=new FormData();fd.append('chunk',blob,'chunk.webm');
+    try{const r=await api('POST',`/api/live/${id}/chunk`,fd);const segs=(r&&r.segments)||[];
+      this.setState(st=>({liveSent:st.liveSent+blob.size,liveErr:null,liveSegs:segs.length?[...st.liveSegs,...segs]:st.liveSegs}));}
+    catch(e){this.setState({liveErr:e.message});}
+  }
+  togglePause(){
+    const r=this.rec,s=this.state;
+    try{if(r){if(s.paused&&r.state==='paused')r.resume();else if(!s.paused&&r.state==='recording')r.pause();}}catch(e){}
+    this.setState({paused:!s.paused});
+  }
+  stopLive(){
+    const s=this.state;if(s.stopping)return;
+    const rec=this.rec,id=s.liveId,title=s.liveTitle;
+    this.setState({stopping:true});
+    const finish=()=>{(this.chain||Promise.resolve()).then(async()=>{
+      try{await api('POST',`/api/live/${id}/stop`);}catch(e){this.toast('Ошибка завершения записи: '+e.message);}
+      if(this.stream)this.stream.getTracks().forEach(t=>t.stop());
+      this.rec=null;this.stream=null;
+      this.setState({live:false,paused:false,stopping:false});
+      this.startProc(id,title);this.refresh();
+    });};
+    if(rec&&rec.state!=='inactive'){rec.addEventListener('stop',()=>setTimeout(finish,0),{once:true});try{rec.stop();}catch(e){finish();}}
+    else finish();
+  }
+  setFile(f){
+    if(!f)return;
+    const ok=/^(audio|video)\//.test(f.type)||/\.(mp3|wav|m4a|mp4|ogg|oga|opus|webm|flac|aac|mkv|mov)$/i.test(f.name);
+    if(!ok){this.toast('Нужен аудио- или видеофайл');return;}
+    this.setState(st=>({file:f,upload:0,dragOver:false,mtitle:st.mtitle||f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ')}));
+  }
+  uploadFile(){
+    const s=this.state;if(!s.file||s.uploading)return;
+    const D=s.data||EMPTY,title=s.mtitle.trim()||s.file.name.replace(/\.[^.]+$/,'');
+    if(MOCK){this.toast('Демо-режим: загрузка доступна при работе с сервером');return;}
+    const fd=new FormData();
+    fd.append('file',s.file,s.file.name);fd.append('title',title);fd.append('date',D.today||isoOf(new Date()));
+    if(s.mpart.trim())fd.append('participants',s.mpart.trim());
+    fd.append('notify',s.notify?'1':'0');fd.append('source','file');
+    const xhr=new XMLHttpRequest();
+    xhr.open('POST','/api/meetings');
+    xhr.upload.onprogress=e=>{if(e.lengthComputable)this.setState({upload:Math.min(100,Math.round(e.loaded/e.total*100))});};
+    xhr.onload=()=>{
+      let r={};try{r=JSON.parse(xhr.responseText||'{}');}catch(e){}
+      if(xhr.status>=200&&xhr.status<300&&r.id!=null){this.setState({uploading:false,upload:100,file:null,modal:null});this.startProc(r.id,title);this.refresh();}
+      else{this.setState({uploading:false,upload:0});this.toast('Ошибка загрузки: '+(r.detail?(typeof r.detail==='string'?r.detail:JSON.stringify(r.detail)):'HTTP '+xhr.status));}
+    };
+    xhr.onerror=()=>{this.setState({uploading:false,upload:0});this.toast('Ошибка сети при загрузке файла');};
+    xhr.send(fd);
+    this.setState({uploading:true,upload:0});
+  }
+  decorate(t,TODAY){
+    const d=parse(t.due),done=t.status==='done',diff=d?Math.round((d-TODAY)/864e5):null,over=!done&&d&&diff<0;
+    const key=done?'done':over?'overdue':'work';
+    let dueLabel;
+    if(done)dueLabel='Выполнено';
+    else if(!d)dueLabel=t.deadline_raw||'срок не указан';
+    else dueLabel=diff<0?`просрочено на ${-diff} ${plural(-diff)}`:diff===0?'сегодня':diff===1?'завтра':`через ${diff} ${plural(diff)}`;
+    const dueColor=done?'var(--ok)':over?'var(--accent)':(d&&diff<=3)?'var(--warn)':'var(--ink2)';
+    const S={work:['В работе','var(--soft)','var(--ink)'],overdue:['Просрочено','var(--accentSoft)','var(--accent)'],done:['Выполнено','var(--okSoft)','var(--ok)']}[key];
+    const pr=PRIO[t.priority]||PRIO.mid,md=parse(t.meeting_date);
+    const co=Array.isArray(t.co_owners)?t.co_owners.filter(Boolean):[];
+    return {...t,key,dueLabel,dueColor,dueDate:d,dueFmt:d?fmtD(d):'без срока',dueFull:d?`${fmtG(d)} ${d.getFullYear()}`:(t.deadline_raw||'не указан'),
+      sLabel:S[0],sBg:S[1],sFg:S[2],prioKey:t.priority||'mid',prio:pr[0],prioBg:pr[1],prioFg:pr[2],color:col(t.hue),ini:t.ini||'—',
+      ownerShort:t.owner_short||shortName(t.owner),ownerName:t.owner||'—',dir:t.direction||'Другое',
+      meeting:`${t.meeting_title||'Совещание'}${md?', '+fmtD(md):''}`,num:t.num||t.id,conf:t.conf==null?'—':t.conf,t:t.t||'—',quote:t.quote||'—',
+      issuedBy:t.issued_by||'—',hasCo:co.length>0,coLabel:co.join(', '),hasFragment:t.seg_idx!=null&&t.meeting_id!=null,
+      unconfirmed:!t.confirmed,confirmed:!!t.confirmed,history:Array.isArray(t.history)?t.history:[],
+      onClick:()=>this.setState({taskId:t.id}),confirm:()=>this.patchTask(t.id,{confirmed:true},'Поручение подтверждено')};
+  }
+  renderVals(){
+    const s=this.state,theme=s.theme||this.props.theme||'light',lang=s.lang||this.props.lang||'ru',role=s.role||this.props.role||'secretary';
+    const t=I18N[lang]||I18N.ru,D=s.data||EMPTY,ST=D.settings||EMPTY.settings;
+    const TODAY=parse(D.today)||(()=>{const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate());})();
+    const tasks=(D.tasks||[]).map(x=>this.decorate(x,TODAY));
+    const findP=n=>(D.people||[]).find(p=>p.name===n);
+    const chair=mostCommon(tasks.map(x=>x.issued_by)),execName=mostCommon(tasks.filter(x=>x.owner_kind!=='department').map(x=>x.owner));
+    const mk=(name,fb)=>{const p=findP(name);return name?{name,ini:(p&&p.ini)||name.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase(),color:col(p?p.hue:230)}:fb;};
+    const me=role==='head'?mk(chair,{name:'Руководитель',ini:'РК',color:col(255)}):role==='executor'?mk(execName,{name:'Исполнитель',ini:'ИС',color:col(160)}):{name:'Секретарь совещаний',ini:'СС',color:col(205)};
+    const scoped=role==='executor'?tasks.filter(x=>x.owner===execName):tasks;
+    const overdueAll=scoped.filter(x=>x.key==='overdue').length;
+    const unread=(D.notifications||[]).filter(n=>!n.read).length;
+    const navScreen=['live','processing','protocol'].includes(s.screen)?'meetings':s.screen;
+    const nav=[['meetings',t.meetings],['tasks',role==='executor'?t.myTasks:t.tasks,overdueAll],['people',t.people],['notif',t.notif,unread],['settings',t.settings]].map(([k,label,badge])=>{const a=navScreen===k;return {label,bg:a?'var(--soft)':'transparent',fg:a?'var(--ink)':'var(--ink2)',fw:a?500:400,hasBadge:!!badge,badge,badgeBg:k==='tasks'?'var(--accent)':'var(--inv)',badgeFg:k==='tasks'?'#fff':'var(--invInk)',onClick:()=>this.go(k)};});
+    const langs=[['ru','RU'],['kk','KZ'],['en','EN']].map(([k,label])=>({label,bg:lang===k?'var(--surface)':'transparent',fg:lang===k?'var(--ink)':'var(--ink3)',onClick:()=>{lsSet('hatshy.lang',k);this.setState({lang:k});}}));
+    const pulseDot=React.createElement('span',{style:{width:10,height:10,borderRadius:'50%',background:'var(--accent)',flexShrink:0,animation:s.paused?'none':'hpulse 1.4s infinite',display:'inline-block'}});
+    const wave=React.createElement('div',{style:{display:'flex',alignItems:'center',gap:3,height:32}},Array.from({length:18},(_,i)=>React.createElement('span',{key:i,style:{width:3,height:32,borderRadius:2,background:'var(--accent)',opacity:0.8,transformOrigin:'center',transform:'scaleY(.25)',animation:s.paused?'none':`hwave ${0.7+(i*37%9)/10}s ${(i*13%7)/10}s infinite ease-in-out`}})));
+    // совещания
+    const mfilters=[['all','Все'],['tasks','С поручениями'],['review','Требуют проверки']].map(([k,label])=>{const a=s.mf===k;return {label,border:a?'var(--ink)':'var(--line)',bg:a?'var(--inv)':'var(--surface)',fg:a?'var(--invInk)':'var(--ink2)',onClick:()=>this.setState({mf:k})};});
+    const q=s.q.trim().toLowerCase();
+    const allM=D.meetings||[];
+    const meetings=allM.filter(m=>(s.mf==='all'||(s.mf==='tasks'&&m.tasks_count>0)||(s.mf==='review'&&(m.status==='review'||m.unconfirmed>0)))&&(!q||String(m.title||'').toLowerCase().includes(q)||(m.people||[]).some(p=>String(p.name||'').toLowerCase().includes(q)))).map(m=>{
+      const SM={done:['Обработано','var(--okSoft)','var(--ok)'],review:['На проверке','var(--warnSoft)','var(--warn)'],processing:[`Обработка ${Math.round(m.pct||0)}%`,'var(--soft)','var(--ink2)'],queued:['В очереди','var(--soft)','var(--ink2)'],error:['Ошибка','var(--accentSoft)','var(--accent)']}[m.status]||[m.status||'—','var(--soft)','var(--ink2)'];
+      const ppl=m.people||[],md=parse(m.date);
+      return {title:m.title||'Без названия',source:m.source_label||'',date:m.date_label||(md?fmtD(md):'—'),dur:m.dur_label||(m.duration_s?secToStr(m.duration_s):'—'),langs:m.langs||'—',tasks:m.tasks_count||'—',
+        status:SM[0],sBg:SM[1],sFg:SM[2],err:m.error||'',av:ppl.slice(0,4).map(p=>({ini:p.ini||'?',color:col(p.hue),name:p.name})),hasMore:ppl.length>4,more:ppl.length-4,noPeople:ppl.length===0,
+        onClick:()=>this.openMeeting(m)};});
+    const tasksTotal=(D.tasks||[]).length;
+    const mSub=`${MONTHS_N[TODAY.getMonth()]} ${TODAY.getFullYear()} · ${allM.length} ${pl(allM.length,['совещание','совещания','совещаний'])} · ${tasksTotal} ${pl(tasksTotal,['поручение','поручения','поручений'])}`;
+    // live
+    const liveSegs=s.liveSegs.map(x=>({t:x.t||'',x:x.x||'',l:x.l||'RU',name:'Участник',color:'var(--ink3)'}));
+    const platform=s.liveSource==='conf'?'Звук конференции':'Микрофон зала';
+    // processing
+    const P=s.prog||{},psteps=(Array.isArray(P.steps)&&P.steps.length?P.steps:STEPS0);
+    const pFin=P.status==='done'||P.status==='review',pErr=P.status==='error';
+    const pStep=pFin?psteps.length:(P.step==null?0:P.step);
+    const procSteps=psteps.map((label,i)=>{const done=i<pStep,cur=i===pStep&&!pErr;return {label,mark:done?'✓':cur?'•':pErr&&i===pStep?'!':'',bg:done?'var(--inv)':'transparent',fg:done?'var(--invInk)':'var(--accent)',border:done?'var(--inv)':(cur||(pErr&&i===pStep))?'var(--accent)':'var(--line)',text:done||cur?'var(--ink)':'var(--ink3)'};});
+    const procPct=Math.round(pFin?100:(P.pct||0));
+    const procLabel=pErr?'Обработка остановлена':P.status==='queued'?'В очереди на обработку':(P.step_label||(s.prog?psteps[Math.min(pStep,psteps.length-1)]:'Подключение к серверу…'));
+    // протокол
+    const det=s.detail&&s.detail.id===s.meetingId?s.detail:null;
+    const mBase=det||allM.find(m=>m.id===s.meetingId)||{};
+    const mdt=parse(mBase.date);
+    const spk=(det&&det.speakers)||[];
+    const nPeople=spk.length||(mBase.people||[]).length;
+    const meeting={title:mBase.title||'Загрузка…',dateL:mdt?`${fmtG(mdt)} ${mdt.getFullYear()}`:'—',dur:mBase.dur_label||secToStr(mBase.duration_s),source:mBase.source_label||'—',
+      nPeople:`${nPeople} ${pl(nPeople,['участник','участника','участников'])}`,langs:langsLabel(mBase.langs),hasLangs:!!mBase.langs};
+    const stT=tasks.filter(x=>x.meeting_id===s.meetingId);
+    const mtasks=stT.length?stT:((det&&det.tasks)||[]).map(x=>this.decorate(x,TODAY));
+    const allConf=mtasks.length>0&&mtasks.every(x=>x.confirmed);
+    const ptabs=[['summary','Краткая сводка'],['report','Подробная сводка'],['transcript','Транскрипт']].map(([k,label])=>({label,border:s.tab===k?'var(--ink)':'transparent',fg:s.tab===k?'var(--ink)':'var(--ink3)',onClick:()=>this.setState({tab:k})}));
+    const sum=(det&&det.summary)||{};
+    const R0=(det&&det.report)||null;
+    const repBlocks=sec=>[['facts','Факты и цифры','var(--ink2)'],['decisions','Решения','var(--ok)'],['tasks','Поручения','var(--warn)'],['risks','Риски и проблемы','var(--accent)'],['open_questions','Открытые вопросы','var(--ink3)']]
+      .map(([k,label,color])=>({label,color,items:(sec[k]||[]).filter(Boolean)})).filter(b=>b.items.length);
+    const rep={has:!!R0,none:!R0,overview:R0?R0.overview:'',conclusion:R0?R0.conclusion:'',generated:R0&&R0.generated?R0.generated.replace(/^(\d{4})-(\d\d)-(\d\d)/,'$3.$2.$1'):'',
+      sections:(R0&&R0.sections||[]).map((sec,i)=>({num:String(i+1).padStart(2,'0'),title:sec.title,t:tcShort(sec.t||'00:00:00'),discussion:sec.discussion,blocks:repBlocks(sec),
+        jump:()=>{const sc=tcToSec(sec.t||'0'),g=nearestSeg(sc);if(g)this.scrollSeg=g.idx;this.setState({tab:'transcript'});this.seekTo(sc,false);}})),
+      people:(R0&&R0.participants||[]),next:(R0&&R0.next_steps||[]).map((x,i)=>({i:String(i+1)+'.',x})),
+      make:()=>this.makeReport(s.meetingId),btnLabel:s.repBusy?'Формируется… (до минуты)':'Сформировать подробную сводку',btnOp:s.repBusy?0.6:1,
+      refreshLabel:s.repBusy?'Обновляется…':'Сформировать заново'};
+    const segList=(det&&det.segments)||[];
+    const nearestSeg=sec=>{let best=null;segList.forEach(g=>{if(g.start<=sec+0.5)best=g;});return best||segList[0];};
+    const topics=(sum.topics||[]).map(tp=>({label:tp.label,t:tcShort(tp.t),onClick:()=>{const sec=tcToSec(tp.t),g=nearestSeg(sec);if(g)this.scrollSeg=g.idx;this.setState({tab:'transcript'});this.seekTo(sec,false);}}));
+    const decisions=(sum.decisions||[]).map(x=>({x:typeof x==='string'?x:(x.text||x.x||JSON.stringify(x))}));
+    const numbers=(sum.numbers||[]).map(n=>({value:n.value,meaning:n.meaning}));
+    const speakers=spk.map(p=>({short:shortName(p.name||p.label),full:p.name||p.label,color:col(p.hue),pct:p.pct==null?0:p.pct,rename:()=>this.renameSpeaker(p)}));
+    const aDur=s.adur||mBase.duration_s||0;
+    const segs=segList.map(g=>{const k=g.task_id!=null?(tasks.find(x=>x.id===g.task_id)||mtasks.find(x=>x.id===g.task_id)):null;const sp=spk.find(p=>p.label===g.speaker);
+      const active=s.playing&&s.acur>=g.start&&s.acur<g.end;
+      return {elId:'seg-'+g.idx,t:g.t,name:g.name||g.speaker||'Говорящий',color:col(g.hue),l:g.l||'RU',x:g.x,hasTask:!!k,taskHint:k?`${k.ownerShort} · ${k.dueDate?'до '+k.dueFmt:k.dueLabel}`:'',
+        bg:s.hl!=null&&s.hl===g.idx?'var(--warnSoft)':active?'var(--soft)':'transparent',
+        seek:()=>this.seekTo(g.start),openTask:()=>k&&this.setState({taskId:k.id}),rename:()=>this.renameSpeaker(sp)};});
+    // поручения
+    const tf=s.tf,opts=a=>a.map(([v,l])=>({v:String(v),l}));
+    const DIRS=[...new Set(tasks.map(x=>x.dir))].sort();
+    const OWN=[...new Map(tasks.map(x=>[x.owner,x.ownerShort])).entries()].filter(([k])=>k);
+    const MT=allM.filter(m=>m.tasks_count>0||tasks.some(x=>x.meeting_id===m.id));
+    const fsel=[
+      {key:'dir',label:'Направление',options:opts([['all','Все'],...DIRS.map(d=>[d,d])])},
+      {key:'owner',label:'Ответственный',options:opts([['all','Все'],...OWN])},
+      {key:'prio',label:'Срочность',options:opts([['all','Любая'],['high','Высокая'],['mid','Средняя'],['low','Низкая']])},
+      {key:'due',label:'Срок',options:opts([['all','Любой'],['overdue','Просрочены'],['week','Ближайшие 7 дней'],['month','Ближайшие 30 дней'],['nodue','Без срока'],['done','Выполненные']])},
+      {key:'m',label:'Совещание',options:opts([['all','Все'],...MT.map(m=>[m.id,m.title])])}
+    ].map(f=>({...f,value:tf[f.key],border:tf[f.key]==='all'?'var(--line)':'var(--ink)',onChange:e=>{const v=e.target.value;this.setState(st=>({tf:{...st.tf,[f.key]:v}}));}}));
+    const tq=s.tq.trim().toLowerCase(),dd=x=>x.dueDate?(x.dueDate-TODAY)/864e5:Infinity;
+    const filtered=scoped.filter(x=>(tf.dir==='all'||x.dir===tf.dir)&&(tf.owner==='all'||x.owner===tf.owner)&&(tf.prio==='all'||x.prioKey===tf.prio)&&(tf.m==='all'||String(x.meeting_id)===tf.m)&&(!tq||String(x.title).toLowerCase().includes(tq)||String(x.ownerShort).toLowerCase().includes(tq)||String(x.owner||'').toLowerCase().includes(tq))
+      &&(tf.due==='all'||(tf.due==='overdue'&&x.key==='overdue')||(tf.due==='done'&&x.key==='done')||(tf.due==='nodue'&&!x.dueDate)||(tf.due==='week'&&x.key==='work'&&dd(x)<=7)||(tf.due==='month'&&x.key!=='done'&&dd(x)<=30)));
+    const activeN=Object.values(tf).filter(v=>v!=='all').length+(tq?1:0);
+    const cntK=k=>filtered.filter(x=>x.key===k).length,workN=cntK('work'),overN=cntK('overdue'),doneN=cntK('done'),totN=filtered.length||1;
+    const disc=doneN+overN?Math.round(doneN/(doneN+overN)*100):100;
+    const statusBar=[['В работе',workN,'var(--ink3)'],['Просрочено',overN,'var(--accent)'],['Выполнено',doneN,'var(--ok)']].map(([label,n,color])=>({label,n,color,pct:n/totN*100}));
+    const PC={high:'var(--accent)',mid:'var(--warn)',low:'var(--ink3)'};
+    const days=Array.from({length:14},(_,i)=>{const d=new Date(TODAY.getFullYear(),TODAY.getMonth(),TODAY.getDate()+i);return {n:d.getDate(),wd:WD[d.getDay()],fw:i===0?600:400,fg:i===0?'var(--accent)':'var(--ink)',bg:i===0?'var(--soft)':'transparent',items:filtered.filter(x=>x.key==='work'&&x.dueDate&&+x.dueDate===+d).slice(0,5).map(x=>({title:`${x.title} · ${x.ownerShort}`,bg:PC[x.prioKey]||PC.mid,onClick:x.onClick}))};});
+    const owners=[...new Set(filtered.map(x=>x.owner))].map(k=>({k,my:filtered.filter(x=>x.owner===k)}));
+    const maxO=Math.max(1,...owners.map(o=>o.my.length));
+    const load=owners.map(({k,my})=>{const c=key=>my.filter(x=>x.key===key).length;return {name:my[0].ownerShort,ini:my[0].ini,color:my[0].color,total:my.length,w:my.length/maxO*100,over:c('overdue'),overColor:c('overdue')?'var(--accent)':'var(--ink3)',segs:[['work','var(--ink3)'],['overdue','var(--accent)'],['done','var(--ok)']].map(([key,color])=>({n:c(key),color})).filter(g=>g.n),onClick:()=>this.setState(st=>({tf:{...st.tf,owner:k}}))};}).sort((a,b)=>b.total-a.total);
+    const dAll=DIRS.map(d=>({label:d,my:filtered.filter(x=>x.dir===d)})).filter(r=>r.my.length),maxD=Math.max(1,...dAll.map(r=>r.my.length));
+    const dirStats=dAll.map(r=>({label:r.label,total:r.my.length,open:r.my.filter(x=>x.key!=='done').length,w:r.my.length/maxD*100,onClick:()=>this.setState(st=>({tf:{...st.tf,dir:r.label}}))})).sort((a,b)=>b.total-a.total);
+    const overdueList=filtered.filter(x=>x.key==='overdue').map(x=>({...x,remind:e=>{e.stopPropagation();this.remind(x);}}));
+    const order={overdue:0,work:1,done:2};
+    const flatTasks=[...filtered].sort((a,b)=>order[a.key]-order[b.key]||dd(a)-dd(b));
+    const columns=[['work','В работе','var(--ink3)'],['overdue','Просрочено','var(--accent)'],['done','Выполнено','var(--ok)']].map(([k,title,color])=>({title,color,items:flatTasks.filter(x=>x.key===k),count:flatTasks.filter(x=>x.key===k).length}));
+    const week=filtered.filter(x=>x.key==='work'&&dd(x)<=7).length;
+    const stats=[[workN,'В работе','var(--ink)'],[overN,'Просрочено','var(--accent)'],[week,'Срок в ближайшие 7 дней','var(--warn)'],[doneN,'Выполнено','var(--ok)']].map(([n,label,color])=>({n,label,color}));
+    const views=[['dash','Дашборд'],['board','Доска'],['list','Список']].map(([k,label])=>({label,bg:s.taskView===k?'var(--surface)':'transparent',fg:s.taskView===k?'var(--ink)':'var(--ink3)',onClick:()=>this.setState({taskView:k})}));
+    // карточка поручения
+    const task=s.taskId!=null?(tasks.find(x=>x.id===s.taskId)||mtasks.find(x=>x.id===s.taskId)):null;
+    const statusOpts=task?[['work','В работе'],['done','Выполнено']].map(([k,label])=>{const a=task.status===k;return {label,bg:a?'var(--surface)':'transparent',fg:a?'var(--ink)':'var(--ink3)',onClick:()=>{if(!a)this.patchTask(task.id,{status:k},k==='done'?'Отмечено как выполненное':'Возвращено в работу');}};}):[];
+    // участники, уведомления, настройки
+    const people=(D.people||[]).map(p=>({...p,color:col(p.hue),pos:p.pos||'',langs:p.langs||'—',meetings:p.meetings==null?'—':p.meetings,open:p.open==null?'—':p.open,ready:!!p.voice,missing:!p.voice}));
+    const notifs=(D.notifications||[]).map(n=>({title:n.title,text:n.text,channel:n.channel,time:n.time,dot:n.type==='over'?'var(--accent)':(n.type==='soon'||n.type==='today')?'var(--warn)':'var(--ink3)',fw:n.read?400:500,
+      onClick:()=>{if(n.task_id!=null&&tasks.some(x=>x.id===n.task_id))this.setState({taskId:n.task_id});else if(n.meeting_id!=null)this.openProtocol(n.meeting_id);}}));
+    const R=ST.rules||{},C=ST.channels||{};
+    const rules=[['d3','За 3 дня до срока'],['d0','В день срока'],['daily','Ежедневно при просрочке'],['esc','Эскалация поручившему через 2 дня просрочки']].map(([k,label])=>({label,...tog(!!R[k]),onClick:()=>this.saveSettings({rules:{...R,[k]:!R[k]}})}));
+    const channels=[['inapp','В приложении'],['email','Email · локальный outbox'],['sed','Задача в СЭД · в разработке']].map(([k,label])=>({label,...tog(!!C[k]),onClick:()=>{if(k==='sed'){this.toast('СЭД: интеграция в разработке');return;}this.saveSettings({channels:{...C,[k]:!C[k]}});}}));
+    const PV=ST.privacy||{};
+    const privacy=[['anon','Анонимизация ФИО в экспорте по умолчанию','Замена ФИО на «Участник N» в PDF и DOCX']].map(([k,label,d])=>({label,d,...tog(!!PV[k]),onClick:()=>this.saveSettings({privacy:{...PV,[k]:!PV[k]}},!PV[k]?'Анонимизация включена':'Анонимизация выключена')}));
+    const LI=s.llmInfo||ST.llm||{},LF=s.llmForm||{provider:LI.provider||'ollama',ollama_model:LI.ollama_model||'',openai_base_url:LI.openai_base_url||'https://api.openai.com/v1',openai_model:LI.openai_model||'',openai_key:''};
+    const saved=ST.llm||LI,ext=saved.provider==='openai';
+    const llmTabs=[['ollama','Локально · Ollama'],['openai','OpenAI API']].map(([k,label])=>({label,bg:LF.provider===k?'var(--surface)':'transparent',fg:LF.provider===k?'var(--ink)':'var(--ink3)',onClick:()=>this.setLlm({provider:k})}));
+    const om=(LI.ollama_models&&LI.ollama_models.length?LI.ollama_models:[LF.ollama_model]).filter(Boolean);
+    const llmV={isOllama:LF.provider!=='openai',isOpenai:LF.provider==='openai',
+      badge:ext?`Сейчас: ${saved.openai_model} · внешний API`:`Сейчас: ${saved.ollama_model||'—'} · локально`,badgeBg:ext?'var(--warnSoft)':'var(--okSoft)',badgeFg:ext?'var(--warn)':'var(--ok)',
+      ollamaUrl:LI.ollama_url||'http://localhost:11434',selKey:'om-'+LF.ollama_model+'-'+om.length,
+      ollamaOpts:om.map(v=>({v,l:v,sel:v===LF.ollama_model})),onOllamaModel:e=>this.setLlm({ollama_model:e.target.value}),
+      baseUrl:LF.openai_base_url,onBase:e=>this.setLlm({openai_base_url:e.target.value}),
+      key:LF.openai_key,onKey:e=>this.setLlm({openai_key:e.target.value}),keyPh:LI.key_set?`ключ сохранён (${LI.key_hint}) — введите новый, чтобы заменить`:'sk-…',
+      oaModel:LF.openai_model,onOaModel:e=>this.setLlm({openai_model:e.target.value}),oaOpts:s.llmModels||[],
+      test:()=>this.testLlm(),save:()=>this.saveLlm(),
+      msg:s.llmMsg?s.llmMsg.t:'',msgColor:s.llmMsg&&s.llmMsg.err?'var(--accent)':s.llmMsg&&s.llmMsg.ok?'var(--ok)':'var(--ink2)'};
+    const extApi=ext?{label:'Разрешено: только текст',d:`Поручения и саммари — через ${saved.openai_model} (${(saved.openai_base_url||'').replace(/^https?:\/\//,'')})`,color:'var(--warn)'}
+      :{label:'Запрещено',d:'LLM работает локально (Ollama), аудио и текст не покидают сервер',color:'var(--ink2)'};
+    const SU=s.setup||{components:[],ollama:{models:[],suggest:[],pull:{}},llm:{}},WS=s.wstep||0,PL=(SU.ollama&&SU.ollama.pull)||{};
+    const olInstalled=(SU.ollama&&SU.ollama.models)||[];
+    const olNames=[...new Set([...olInstalled,...((SU.ollama&&SU.ollama.suggest)||[]).map(x=>x.model)])];
+    const D0=s.dlg;
+    const dlgV={open:!!D0,title:D0?D0.title:'',text:D0?D0.text||'':'',hasInput:!!(D0&&D0.hasInput),value:D0?D0.value:'',okLabel:D0?D0.okLabel||'OK':'',
+      okBg:D0&&D0.danger?'var(--accent)':'var(--inv)',okFg:D0&&D0.danger?'#fff':'var(--invInk)',
+      onInput:e=>{const v=e.target.value;this.setState(st=>({dlg:{...st.dlg,value:v}}));},
+      onKey:e=>{if(e.key==='Enter'){const d=this.state.dlg;this.setState({dlg:null});if(d&&d.onOk)d.onOk(d.value);}},
+      cancel:()=>this.setState({dlg:null}),ok:()=>{const d=this.state.dlg;this.setState({dlg:null});if(d&&d.onOk)d.onOk(d.value);}};
+    const wzV={open:!!s.wz,n:WS+1,s0:WS===0,s1:WS===1,s2:WS===2,s3:WS===3,canBack:WS>0,
+      dots:[0,1,2,3].map(i=>({bg:i<=WS?'var(--inv)':'var(--soft)'})),disk:SU.disk_free_gb==null?'—':SU.disk_free_gb,
+      features:[{t:'Распознавание RU · KZ · шала-казахский',d:'GigaAM-Multilingual на процессоре, теги языка у каждой реплики',c:'var(--accent)'},
+        {t:'Кто говорит и кому поручено',d:'Диаризация по голосу, имена по обращениям, поручения с ответственным и сроком',c:'var(--warn)'},
+        {t:'Закрытый контур',d:'Аудио и текст не покидают сервер; облачный ИИ — только если вы включите его сами',c:'var(--ok)'}],
+      comps:(SU.components||[]).map(c=>({...c,ok:c.installed,busy:!c.installed&&c.state==='downloading',canGet:!c.installed&&c.state!=='downloading',err:!!c.error&&!c.installed,
+        size:c.size_mb>=100?`${(c.size_mb/1000).toFixed(1).replace('.',',')} ГБ`:`${c.size_mb} МБ`,get:()=>this.setupAct('/api/setup/download',{id:c.id})})),
+      needModels:(SU.components||[]).some(c=>!c.installed&&c.state!=='downloading'),getAll:()=>this.setupAct('/api/setup/download',{id:'all'}),
+      olStatus:SU.ollama&&SU.ollama.running?`Ollama запущена · установлено моделей: ${olInstalled.length}. Выберите модель:`:'Ollama не запущена. Установите с ollama.com и запустите, либо выберите OpenAI API.',
+      olColor:SU.ollama&&SU.ollama.running?'var(--ink2)':'var(--accent)',
+      olModels:olNames.map(name=>{const sg=((SU.ollama&&SU.ollama.suggest)||[]).find(x=>x.model===name)||{};const ok=olInstalled.includes(name);const busy=PL.state==='downloading'&&PL.model===name;
+        return {name,note:sg.note?`${sg.note} · ${String(sg.size_gb).replace('.',',')} ГБ`:'установлена локально',ok,busy,pct:busy?PL.pct||0:0,canPull:!ok&&!busy&&!!(SU.ollama&&SU.ollama.running),size:sg.size_gb?`${String(sg.size_gb).replace('.',',')} ГБ`:'',
+          border:LF.ollama_model===name&&LF.provider!=='openai'?'var(--ink)':'var(--line)',pick:()=>{if(ok)this.setLlm({provider:'ollama',ollama_model:name});},
+          pull:e=>{e.stopPropagation();this.setupAct('/api/setup/ollama_pull',{model:name});}};}),
+      pullErr:PL.state==='error',pullError:PL.error||'',
+      doneTitle:SU.ready?'Всё готово к работе':'Почти готово',
+      checks:[{t:'Модели распознавания и диаризации',v:SU.models_ready?'✓ установлены':'не установлены',c:SU.models_ready?'var(--ok)':'var(--accent)'},
+        {t:'ИИ для поручений',v:SU.llm_ready?(SU.llm&&SU.llm.provider==='openai'?`✓ ${SU.llm.openai_model} (OpenAI API)`:`✓ ${SU.llm&&SU.llm.ollama_model} (локально)`):'не настроен',c:SU.llm_ready?'var(--ok)':'var(--accent)'},
+        {t:'Обработка данных',v:SU.llm&&SU.llm.provider==='openai'?'текст — во внешний API':'полностью локально',c:SU.llm&&SU.llm.provider==='openai'?'var(--warn)':'var(--ok)'}],
+      nextLabel:WS===3?'Начать работу':'Далее',next:()=>this.wizNext(),back:()=>this.setState({wstep:Math.max(0,WS-1)}),
+      skip:()=>{this.setupAct('/api/setup/complete',{done:true});this.setState({wz:false});},openIt:()=>this.openWizard()};
+    const integrations=[
+      {k:'Звук Zoom · Teams · Google Meet',d:'Через системное аудиоустройство (BlackHole), без бота',btn:'Доступно',on:true},
+      {k:'Email-рассылка выдержек',d:'Письма пишутся в локальный outbox (data/outbox)',btn:'Подключено',on:true},
+      {k:'Telegram-бот',d:'Напоминания исполнителям',btn:'В разработке',on:false},
+      {k:'СЭД',d:'Выгрузка поручений как задач',btn:'В разработке',on:false}
+    ].map(r=>({...r,bg:'var(--soft)',fg:r.on?'var(--ink2)':'var(--ink3)',onClick:()=>this.toast(r.on?`${r.k}: работает локально`:`${r.k}: интеграция в разработке`)}));
+    // новое совещание
+    const newTabs=[['conf','Звук конференции'],['mic','Запись в зале'],['file','Загрузить файл']].map(([k,label])=>({label,bg:s.newTab===k?'var(--surface)':'transparent',fg:s.newTab===k?'var(--ink)':'var(--ink3)',onClick:()=>this.setState(st=>({newTab:k,deviceId:k==='file'?st.deviceId:this.pickDevice(st.devices,k,k===st.newTab?st.deviceId:'')}))}));
+    const devOpts=s.devices.length?s.devices.map(d=>({v:d.id,l:d.label})):[{v:'',l:'Устройство по умолчанию'}];
+    const curDev=s.devices.find(d=>d.id===s.deviceId);
+    let startLabel,startAction,startOpacity=1;
+    if(s.newTab==='conf'){startLabel='Начать запись звука';startAction=()=>this.startRec('conf');}
+    else if(s.newTab==='mic'){startLabel='Начать запись';startAction=()=>this.startRec('mic');}
+    else{startLabel=s.uploading?`Загрузка ${s.upload}%…`:s.file?'Обработать запись':'Выберите файл';startOpacity=s.file&&!s.uploading?1:0.4;startAction=()=>this.uploadFile();}
+    const f=s.file;
+    // экспорт
+    const fmts=[['pdf','PDF','Для печати и подписи'],['docx','DOCX','Для редактирования']].map(([k,label,d])=>({label,d,border:s.fmt===k?'var(--ink)':'var(--line)',onClick:()=>this.setState({fmt:k})}));
+    const sections=[['summary','Краткое содержание и решения'],['tasks','Таблица поручений'],['transcript','Полная стенограмма с таймкодами'],['people','Список участников'],['sign','Поля для подписей']].map(([k,label])=>{const on=s.secs[k];return {label,mark:on?'✓':'',bg:on?'var(--inv)':'transparent',border:on?'var(--inv)':'var(--line)',onClick:()=>this.setState(st=>({secs:{...st.secs,[k]:!st.secs[k]}}))};});
+    const anonRow={mark:s.anon?'✓':'',bg:s.anon?'var(--inv)':'transparent',border:s.anon?'var(--inv)':'var(--line)',onClick:()=>this.setState({anon:!s.anon})};
+    const anonMap={};let anonN=0;const anonName=n=>{if(!s.anon||!n)return n;if(!anonMap[n])anonMap[n]=`Участник ${++anonN}`;return anonMap[n];};
+    spk.forEach(p=>anonName(p.name));
+    const pv={num:s.meetingId==null?'—':s.meetingId,title:mBase.title||'—',date:mdt?`${pad(mdt.getDate())}.${pad(mdt.getMonth()+1)}.${mdt.getFullYear()}`:'—',
+      summary:s.secs.summary,tasks:s.secs.tasks,transcript:s.secs.transcript,people:s.secs.people,sign:s.secs.sign,
+      rows:mtasks.slice(0,3).map((k,i)=>({n:i+1,title:k.title,owner:s.anon?anonName(k.owner):k.ownerShort,due:k.dueDate?`${pad(k.dueDate.getDate())}.${pad(k.dueDate.getMonth()+1)}`:'—'}))};
+    return {
+      theme,t,nav,langs,me,roleLabel:ROLE_LABEL[role]||'Секретарь',canRecord:role!=='executor',
+      contourDot:s.apiErr?'var(--accent)':'var(--ok)',contourText:MOCK?'Демо-данные (mock) · без сервера':s.apiErr?'Нет связи с локальным сервером':'Аудио и текст не покидают сервер',
+      hasApiErr:!!s.apiErr&&!MOCK,apiErr:s.apiErr,
+      toggleTheme:()=>{const v=theme==='dark'?'light':'dark';lsSet('hatshy.theme',v);this.setState({theme:v});},
+      cycleRole:()=>{const r=['secretary','head','executor'];const v=r[(r.indexOf(role)+1)%3];lsSet('hatshy.role',v);this.setState({role:v});},
+      openNew:()=>this.openNew(),closeModal:()=>{if(!s.uploading)this.setState({modal:null});},
+      isMeetings:s.screen==='meetings',isLive:s.screen==='live',isProcessing:s.screen==='processing',isProtocol:s.screen==='protocol',isTasks:s.screen==='tasks',isPeople:s.screen==='people',isNotif:s.screen==='notif',isSettings:s.screen==='settings',
+      goMeetings:()=>{clearInterval(this.pp);this.go('meetings');},goLive:()=>this.go('live'),
+      pulseDot,wave,timer:secToStr(s.sec),platform,liveTitle:s.liveTitle,liveDevice:s.liveDevice,showLiveMini:s.live&&s.screen!=='live',showLiveBanner:s.live&&s.screen==='meetings',
+      liveState:s.stopping?'завершаем…':s.paused?'Пауза':`запись идёт · фрагменты каждые 4 с`,pauseLabel:s.paused?'Продолжить':'Пауза',
+      togglePause:()=>this.togglePause(),stopLive:()=>this.stopLive(),stopLabel:s.stopping?'Отправляем последний фрагмент…':'Завершить и сформировать протокол',stopOpacity:s.stopping?0.6:1,
+      consentDot:s.liveNotify?'var(--ok)':'var(--ink3)',consentText:s.liveNotify?'Участники уведомлены: прозвучало предупреждение о записи и ИИ-транскрибации (RU/KZ). Обработка локальная.':'Уведомление участников о записи отключено. Обработка локальная.',
+      liveNotify:s.liveNotify,liveSegs,listening:s.live&&!s.paused,trRef:this.trRef,hasLiveErr:!!s.liveErr,liveErr:s.liveErr,liveCount:s.liveSegs.length,liveSent:`${(s.liveSent/1048576).toFixed(1)} МБ`,
+      procSteps,procPct,procLabel,procTitle:s.procTitle,hasProcErr:pErr,procErr:P.error||'неизвестная ошибка',procRunning:!pErr,
+      deleteProc:()=>this.deleteMeeting(s.procId,s.procTitle),
+      q:s.q,onQ:e=>this.setState({q:e.target.value}),mfilters,meetings,mSub,noMeetings:meetings.length===0,noMeetingsText:allM.length?'Ничего не найдено.':(s.data?'Совещаний пока нет — нажмите «Новое совещание», чтобы записать или загрузить аудио.':'Загрузка…'),
+      meeting,ptabs,isSummary:s.tab==='summary',isReport:s.tab==='report',rep,isTranscript:s.tab==='transcript',topics,noTopics:!!det&&topics.length===0,speakers,segs,noSegs:segs.length===0,noSegsText:det?'Транскрипт пуст.':'Загрузка…',
+      sumShort:det?(sum.short||'Саммари не сформировано.'):'Загрузка…',decisions,noDecisions:!!det&&decisions.length===0,numbers,hasNumbers:numbers.length>0,
+      mtasks,mtaskCount:mtasks.length,noMtasks:!!det&&mtasks.length===0,
+      confirmAllLabel:allConf?'Все подтверждены':'Подтвердить все',confirmAll:()=>{if(!allConf)this.confirmAll();},
+      togglePlay:()=>this.togglePlay(),playIcon:s.playing?'❚❚':'▶',playPct:aDur?Math.min(100,s.acur/aDur*100):0,playTime:secToStr(s.acur),playDur:secToStr(aDur),
+      onBar:e=>{const r=e.currentTarget.getBoundingClientRect();if(aDur&&r.width)this.seekTo((e.clientX-r.left)/r.width*aDur,false);},
+      sendExtracts:()=>this.sendExtracts(),openExport:()=>this.setState({modal:'export',anon:!!PV.anon}),deleteMeeting:()=>this.deleteMeeting(s.meetingId,mBase.title),reprocessMeeting:()=>this.reprocessMeeting(s.meetingId,mBase.title),
+      tasksTitle:role==='executor'?t.myTasks:t.tasks,todayLabel:fmtG(TODAY),views,isBoard:s.taskView==='board',isList:s.taskView==='list',stats,columns,flatTasks,noFlat:flatTasks.length===0,isDash:s.taskView==='dash',fsel,tq:s.tq,onTq:e=>this.setState({tq:e.target.value}),hasFilters:activeN>0,activeN,resetFilters:()=>this.setState({tq:'',tf:{dir:'all',owner:'all',prio:'all',due:'all',m:'all'}}),disc,statusBar,days,load,dirStats,overdueList,overN,noOverdue:overN===0,
+      hasTask:!!task,task:task||{history:[]},statusOpts,closeTask:()=>this.setState({taskId:null}),
+      openFragment:()=>{if(task)this.openProtocol(task.meeting_id,'transcript',task.seg_idx);},
+      remindNow:()=>{if(task)this.remind(task);},sendSed:()=>this.toast('СЭД: интеграция в разработке'),
+      people,noPeople:people.length===0,
+      notifs,noNotifs:notifs.length===0,rules,channels,markRead:()=>this.markRead(),dateType:'date',demoDate:s.demoDate,onDemoDate:e=>this.setState({demoDate:e.target.value}),runDemo:()=>this.runDemo(),
+      infra:ST.infra||[],models:ST.models||[],privacy,integrations,llm:llmV,llmTabs,extApi,wz:wzV,dlg:dlgV,
+      isNew:s.modal==='new',newTabs,tabConf:s.newTab==='conf',tabMic:s.newTab==='mic',tabFile:s.newTab==='file',tabRec:s.newTab!=='file',
+      mtitle:s.mtitle,onTitle:e=>this.setState({mtitle:e.target.value}),titlePh:s.newTab==='conf'?'Например: Онлайн-планёрка по бюджету':s.newTab==='mic'?'Например: Штаб по отопительному сезону':'По умолчанию — имя файла',
+      mpart:s.mpart,onPart:e=>this.setState({mpart:e.target.value}),
+      devOpts,deviceId:s.deviceId,onDevice:e=>this.setState({deviceId:e.target.value}),deviceLabel:curDev?curDev.label:'Устройство по умолчанию',needDevAccess:!s.devices.some(d=>d.named),askDevices:()=>this.loadDevices(true),
+      fileRef:this.fileRef,onFile:e=>{this.setFile(e.target.files&&e.target.files[0]);e.target.value='';},pickFile:()=>{if(this.fileRef.current)this.fileRef.current.click();},
+      onDragOver:e=>{e.preventDefault();if(!s.dragOver)this.setState({dragOver:true});},onDragLeave:()=>this.setState({dragOver:false}),onDrop:e=>{e.preventDefault();this.setFile(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]);},dropBorder:s.dragOver?'var(--ink)':'var(--line)',
+      noFile:!f,hasFile:!!f,fileName:f?f.name:'',fileSize:f?(f.size>=1048576?`${(f.size/1048576).toFixed(1)} МБ`:`${Math.max(1,Math.round(f.size/1024))} КБ`):'',upload:s.upload,canChangeFile:!s.uploading,clearFile:()=>this.setState({file:null,upload:0}),
+      notifyBg:tog(s.notify).bg,notifyJc:tog(s.notify).jc,toggleNotify:()=>this.setState({notify:!s.notify}),
+      notifyHint:s.newTab==='file'?'Отметка о согласии участников сохраняется в протоколе':'Перед записью прозвучит предупреждение на русском и казахском',
+      startLabel,startAction,startOpacity,
+      isExport:s.modal==='export',fmts,sections,anonRow,pv,exportName:`protocol_${s.meetingId}.${s.fmt}`,doExport:()=>this.doExport(),
+      hasToast:!!s.toast,toast:s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

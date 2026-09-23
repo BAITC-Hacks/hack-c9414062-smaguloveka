@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fbfbfc">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AI Hatshy">
+<title>AI Hatshy</title>
+<link rel="manifest" href="/static/mobile/manifest.json">
+<link rel="icon" href="/static/mobile/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/fonts.css">
+<style>
+body{margin:0;background:var(--desk)}*{box-sizing:border-box}
+:root,[data-theme="light"]{--bg:oklch(0.985 0.002 250);--surface:#fff;--soft:oklch(0.965 0.003 250);--line:oklch(0.92 0.004 250);--ink:oklch(0.23 0.006 250);--ink2:oklch(0.47 0.006 250);--ink3:oklch(0.62 0.006 250);--accent:oklch(0.61 0.21 27);--accentSoft:oklch(0.955 0.025 27);--ok:oklch(0.56 0.12 155);--okSoft:oklch(0.955 0.03 155);--warn:oklch(0.6 0.13 70);--warnSoft:oklch(0.96 0.035 80);--inv:oklch(0.23 0.006 250);--invInk:#fff;--desk:oklch(0.93 0.003 250)}
+[data-theme="dark"]{--bg:oklch(0.165 0.004 250);--surface:oklch(0.2 0.005 250);--soft:oklch(0.245 0.005 250);--line:oklch(0.3 0.006 250);--ink:oklch(0.95 0.003 250);--ink2:oklch(0.75 0.005 250);--ink3:oklch(0.6 0.006 250);--accent:oklch(0.67 0.19 27);--accentSoft:oklch(0.29 0.06 27);--ok:oklch(0.74 0.12 155);--okSoft:oklch(0.29 0.045 155);--warn:oklch(0.8 0.12 75);--warnSoft:oklch(0.31 0.045 75);--inv:oklch(0.95 0.003 250);--invInk:oklch(0.17 0.004 250);--desk:oklch(0.11 0.003 250)}
+a{color:var(--ink);text-decoration:none}a:hover{color:var(--accent)}
+button,input{font-family:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+@keyframes hpulse{0%{box-shadow:0 0 0 0 oklch(0.61 0.21 27 / 0.55)}100%{box-shadow:0 0 0 10px oklch(0.61 0.21 27 / 0)}}
+@keyframes hwave{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+@keyframes hin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* На реальном телефоне убираем «рамку устройства» и фейковый статус-бар */
+@media (max-width:500px){
+  body{background:var(--bg)}
+  .hx-desk{padding:0!important;gap:0!important;justify-content:flex-start!important;align-items:stretch!important;background:var(--bg)!important}
+  .hx-frame{width:100%!important;height:100vh!important;height:100dvh!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding-top:env(safe-area-inset-top)}
+  .hx-tabs{height:calc(84px + env(safe-area-inset-bottom))!important;padding-bottom:env(safe-area-inset-bottom)!important}
+  .hx-status,.hx-hint{display:none!important}
+}
+</style>
+<script src="/static/vendor/react.production.min.js"></script>
+<script src="/static/vendor/react-dom.production.min.js"></script>
+<script src="/static/support.js"></script>
+</head>
+<body>
+<x-dc>
+<div class="hx-desk" data-theme="{{theme}}" style="min-height:100vh;background:var(--desk);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px 16px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)">
+<div class="hx-frame" style="width:390px;height:844px;border-radius:48px;background:var(--bg);border:10px solid oklch(0.2 0.005 250);overflow:hidden;position:relative;display:flex;flex-direction:column;font-size:15px;line-height:1.45;box-shadow:0 20px 60px oklch(0.2 0.01 250 / 0.2)">
+  <div class="hx-status" style="height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:14px;font-weight:600"><span>{{clock}}</span><span style="width:110px;height:28px;border-radius:14px;background:oklch(0.2 0.005 250)"></span><span style="font-size:12px">100%</span></div>
+
+  <div class="hx-scroll" style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+
+  <sc-if value="{{isHome}}" hint-placeholder-val="{{true}}">
+    <div style="padding:12px 20px 24px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:24px;height:24px;border-radius:7px;background:var(--inv);display:flex;align-items:center;justify-content:center"><div style="width:7px;height:7px;border-radius:50%;background:var(--accent)"></div></div><span style="font-weight:600">AI Hatshy</span></div>
+        <button onClick="{{toggleTheme}}" title="Сменить тему" style="width:36px;height:36px;border-radius:50%;border:none;background:var(--inv);color:var(--invInk);font-size:12px;font-weight:500">{{avatar}}</button>
+      </div>
+      <div><div style="font-size:26px;font-weight:600;letter-spacing:-0.02em">{{greeting}}</div><div style="color:var(--ink2)">{{dateLine}}</div></div>
+      <sc-if value="{{live}}" hint-placeholder-val="{{false}}">
+        <button onClick="{{goLive}}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;border:none;background:var(--accentSoft);color:var(--ink);text-align:left">{{pulseDot}}<span style="flex:1;font-weight:500">{{pillLabel}}</span><span style="font-family:'IBM Plex Mono',monospace">{{timer}}</span></button>
+      </sc-if>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <sc-for list="{{stats}}" as="st" hint-placeholder-count="3"><button onClick="{{st.onClick}}" style="padding:14px 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;display:flex;flex-direction:column;gap:2px"><span style="font-size:24px;font-weight:600;color:{{st.color}}">{{st.n}}</span><span style="font-size:12px;color:var(--ink2)">{{st.label}}</span></button></sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:13px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Требуют внимания</div>
+        <sc-for list="{{urgent}}" as="k" hint-placeholder-count="3">
+          <button onClick="{{k.onClick}}" style="padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;display:flex;flex-direction:column;gap:6px"><span style="font-weight:500;text-wrap:pretty">{{k.title}}</span><span style="display:flex;justify-content:space-between;gap:10px;width:100%;font-size:13px"><span style="color:var(--ink2)">{{k.owner}}</span><span style="color:{{k.dueColor}};text-align:right">{{k.dueLabel}}</span></span></button>
+        </sc-for>
+        <sc-if value="{{noUrgent}}" hint-placeholder-val="{{false}}"><div style="font-size:14px;color:var(--ink3)">{{noUrgentText}}</div></sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:13px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Последние совещания</div>
+        <sc-for list="{{meetings}}" as="m" hint-placeholder-count="3">
+          <div style="padding:12px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px"><div><div style="font-weight:500">{{m.title}}</div><div style="font-size:13px;color:var(--ink2)">{{m.meta}}</div></div><span style="font-size:13px;color:{{m.rightColor}};white-space:nowrap">{{m.right}}</span></div>
+        </sc-for>
+        <sc-if value="{{noMeetings}}" hint-placeholder-val="{{false}}"><div style="font-size:14px;color:var(--ink3)">Совещаний пока нет — нажмите красную кнопку, чтобы начать запись</div></sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isLive}}" hint-placeholder-val="{{false}}">
+    <div style="padding:12px 20px 24px;display:flex;flex-direction:column;gap:16px;flex:1">
+      <button onClick="{{goHome}}" style="align-self:flex-start;border:none;background:none;padding:0;color:var(--ink2);font-size:14px">← Назад</button>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 0">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);text-align:center">{{pulseDot}}{{liveTitle}}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:48px;font-weight:500">{{timer}}</div>
+        {{wave}}
+        <div style="font-size:12px;color:var(--ink3);text-align:center">{{consentLine}}</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+        <sc-if value="{{noSegs}}" hint-placeholder-val="{{false}}"><div style="font-size:13px;color:var(--ink3);text-align:center;padding:8px 0">{{noSegsText}}</div></sc-if>
+        {{liveList}}
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onClick="{{togglePause}}" style="flex:1;height:52px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:500;font-size:15px">{{pauseLabel}}</button>
+        <button onClick="{{stopLive}}" style="flex:1.4;height:52px;border-radius:14px;border:none;background:var(--accent);color:#fff;font-weight:500;font-size:15px">Завершить</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isTasks}}" hint-placeholder-val="{{false}}">
+    <div style="padding:12px 20px 24px;display:flex;flex-direction:column;gap:16px">
+      <div style="font-size:26px;font-weight:600;letter-spacing:-0.02em">Поручения</div>
+      <div style="display:flex;padding:3px;border-radius:12px;background:var(--soft);gap:2px">
+        <sc-for list="{{filters}}" as="f" hint-placeholder-count="3"><button onClick="{{f.onClick}}" style="flex:1;height:36px;border:none;border-radius:9px;background:{{f.bg}};color:{{f.fg}};font-size:13px;font-weight:500">{{f.label}}</button></sc-for>
+      </div>
+      <sc-for list="{{tasks}}" as="k" hint-placeholder-count="4">
+        <button onClick="{{k.onClick}}" style="padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;display:flex;flex-direction:column;gap:8px">
+          <span style="font-weight:500;text-wrap:pretty">{{k.title}}</span>
+          <span style="display:flex;justify-content:space-between;gap:10px;width:100%;font-size:13px;align-items:center"><span style="display:flex;align-items:center;gap:6px;color:var(--ink2)"><span style="width:22px;height:22px;flex-shrink:0;border-radius:50%;background:{{k.color}};color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center">{{k.ini}}</span>{{k.owner}}</span><span style="color:{{k.dueColor}};text-align:right">{{k.dueLabel}}</span></span>
+        </button>
+      </sc-for>
+      <sc-if value="{{noTasks}}" hint-placeholder-val="{{false}}"><div style="font-size:14px;color:var(--ink3);text-align:center;padding:24px 0">{{noTasksText}}</div></sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isTask}}" hint-placeholder-val="{{false}}">
+    <div style="padding:12px 20px 24px;display:flex;flex-direction:column;gap:18px">
+      <button onClick="{{backFromTask}}" style="align-self:flex-start;border:none;background:none;padding:0;color:var(--ink2);font-size:14px">{{backLabel}}</button>
+      <div style="display:flex;gap:6px;font-size:12px;flex-wrap:wrap"><span style="padding:3px 8px;border-radius:5px;background:{{task.sBg}};color:{{task.sFg}};font-weight:500">{{task.sLabel}}</span><span style="padding:3px 8px;border-radius:5px;background:var(--soft);color:var(--ink2)">{{task.dir}}</span><sc-if value="{{task.isHigh}}" hint-placeholder-val="{{false}}"><span style="padding:3px 8px;border-radius:5px;background:var(--warnSoft);color:var(--ink)">Высокий приоритет</span></sc-if></div>
+      <div style="font-size:22px;font-weight:600;letter-spacing:-0.01em;text-wrap:pretty">{{task.title}}</div>
+      <div style="display:flex;flex-direction:column;border-top:1px solid var(--line)">
+        <div style="display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)"><span style="color:var(--ink2)">Ответственный</span><span style="text-align:right">{{task.ownerFull}}</span></div>
+        <div style="display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)"><span style="color:var(--ink2)">Срок</span><span style="text-align:right">{{task.dueFmt}}{{task.dueSep}}<span style="color:{{task.dueColor}}">{{task.dueDetail}}</span></span></div>
+        <div style="display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)"><span style="color:var(--ink2)">Куратор</span><span style="text-align:right">{{task.curator}}</span></div>
+        <div style="display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)"><span style="color:var(--ink2)">Совещание</span><span style="text-align:right">{{task.meetingLine}}</span></div>
+      </div>
+      <sc-if value="{{task.hasQuote}}" hint-placeholder-val="{{false}}">
+        <div style="padding:14px 16px;border-radius:14px;background:var(--soft);display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;color:var(--ink3);font-family:'IBM Plex Mono',monospace">{{task.t}} · {{task.meeting}}</span><span style="text-wrap:pretty">«{{task.quote}}»</span></div>
+      </sc-if>
+      <button onClick="{{toggleDone}}" style="height:52px;border-radius:14px;border:none;background:var(--inv);color:var(--invInk);font-weight:500;font-size:15px">{{doneLabel}}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isNotif}}" hint-placeholder-val="{{false}}">
+    <div style="padding:12px 20px 24px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:26px;font-weight:600;letter-spacing:-0.02em;margin-bottom:10px">Уведомления</div>
+      <sc-for list="{{notifs}}" as="n" hint-placeholder-count="4">
+        <button onClick="{{n.onClick}}" style="display:grid;grid-template-columns:10px minmax(0,1fr);gap:12px;padding:14px 0;border:none;border-bottom:1px solid var(--line);background:none;color:var(--ink);text-align:left"><span style="width:8px;height:8px;margin-top:7px;border-radius:50%;background:{{n.dot}}"></span><span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:500;text-wrap:pretty">{{n.title}}</span><span style="font-size:13px;color:var(--ink2)">{{n.text}}</span><span style="font-size:12px;color:var(--ink3)">{{n.when}}</span></span></button>
+      </sc-for>
+      <sc-if value="{{noNotifs}}" hint-placeholder-val="{{false}}"><div style="font-size:14px;color:var(--ink3);padding:12px 0">Уведомлений пока нет</div></sc-if>
+    </div>
+  </sc-if>
+  </div>
+
+  <sc-if value="{{showTabs}}" hint-placeholder-val="{{true}}">
+  <div class="hx-tabs" style="height:84px;flex-shrink:0;border-top:1px solid var(--line);background:var(--surface);display:grid;grid-template-columns:1fr 1fr 76px 1fr 1fr;align-items:start;padding:8px 8px 0">
+    <button onClick="{{goHome}}" style="height:48px;border:none;background:none;font-size:12px;font-weight:500;color:{{homeFg}}">Главная</button>
+    <button onClick="{{goTasks}}" style="height:48px;border:none;background:none;font-size:12px;font-weight:500;color:{{tasksFg}}">Поручения</button>
+    <button onClick="{{startLive}}" aria-label="{{recLabel}}" title="{{recLabel}}" style="width:60px;height:60px;margin:-18px auto 0;border-radius:50%;border:5px solid var(--surface);background:var(--accent);display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border-radius:{{recRadius}};background:#fff"></span></button>
+    <button onClick="{{goNotif}}" style="position:relative;height:48px;border:none;background:none;font-size:12px;font-weight:500;color:{{notifFg}}">Уведомления<sc-if value="{{hasUnread}}" hint-placeholder-val="{{false}}"><span style="position:absolute;top:9px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)"></span></sc-if></button>
+    <a href="/" style="height:48px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--ink3)">Веб</a>
+  </div>
+  </sc-if>
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div style="position:absolute;left:20px;right:20px;bottom:100px;padding:12px 16px;border-radius:12px;background:var(--inv);color:var(--invInk);font-size:14px;animation:hin .25s ease;z-index:5;box-shadow:0 10px 30px oklch(0.2 0.01 250 / 0.3)">{{toast}}</div></sc-if>
+</div>
+<div class="hx-hint" style="font-size:12px;color:var(--ink3)">Нажмите на аватар, чтобы сменить тему{{mockNote}}</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;}}">
+const MONTHS=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+const MONTHS_G=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const WDAYS=['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+const MOCK=new URLSearchParams(location.search).get('mock')==='1';
+const pad=n=>String(n).padStart(2,'0');
+const parse=s=>{const [y,m,d]=String(s).slice(0,10).split('-').map(Number);return new Date(y,m-1,d);};
+const isoOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const plural=n=>{const a=n%10,b=n%100;if(a===1&&b!==11)return 'день';if(a>=2&&a<=4&&(b<12||b>14))return 'дня';return 'дней';};
+const mmss=s=>`${pad(Math.floor(s/60))}:${pad(s%60)}`;
+const hueCol=h=>`oklch(0.6 0.12 ${h==null?250:h})`;
+const initials=n=>{const p=String(n||'').trim().split(/\s+/).filter(Boolean);if(!p.length)return '?';return (p.length>1?p[0][0]+p[1][0]:p[0][0]).toUpperCase();};
+const durFmt=(s,lbl)=>{if(s==null||isNaN(s))return lbl||'';const m=Math.round(s/60);if(m<1)return `${Math.round(s)} с`;if(m<60)return `${m} мин`;return `${Math.floor(m/60)} ч ${m%60} мин`;};
+const LS={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
+async function api(method,url,body){
+  const o={method,headers:{}};
+  if(body instanceof FormData)o.body=body;else if(body!==undefined){o.headers['Content-Type']='application/json';o.body=JSON.stringify(body);}
+  const r=await fetch(url,o);
+  if(!r.ok)throw new Error(method+' '+url+' -> '+r.status);
+  const ct=r.headers.get('content-type')||'';
+  return ct.includes('json')?r.json():r.text();
+}
+function pickMime(){
+  if(!window.MediaRecorder||!MediaRecorder.isTypeSupported)return '';
+  for(const m of ['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'])if(MediaRecorder.isTypeSupported(m))return m;
+  return '';
+}
+const MOCK_SEGS=[
+ {l:'RU+KZ',x:'Коллеги, начинаем. Бүгін жылу беру маусымына дайындықты қарастырамыз.'},
+ {l:'RU+KZ',x:'Котельные дайын, но по двум районам ещё идёт опрессовка.'},
+ {l:'RU',x:'Ержан, завершите опрессовку до 1 октября и доложите.',task:'Сапаров Е. · до 1 окт'},
+ {l:'RU',x:'Финансирование на ремонт сетей выделено полностью.'},
+ {l:'KZ',x:'Динара, есепті жұмаға дейін дайындаңыз.',task:'Ахметова Д. · до 25 сен'}
+];
+const EMPTY={today:null,meetings:[],tasks:[],notifications:[],settings:{}};
+
+class Component extends DCLogic {
+  state={screen:'home',prev:'tasks',data:null,taskId:null,f:'work',toast:null,theme:LS.get('hx-theme'),
+    live:false,starting:false,paused:false,sec:0,liveTitle:'',segs:[],now:new Date()};
+  componentDidMount(){
+    this.applyTheme(this.state.theme||this.props.theme||'light');
+    this.load();
+    if(!MOCK)this.poll=setInterval(()=>this.load(),5000);
+    this.iv=setInterval(()=>{const s=this.state;const patch={now:new Date()};if(s.live&&!s.paused)patch.sec=s.sec+1;this.setState(patch);},1000);
+    this.onUnload=e=>{if(this.state.live){e.preventDefault();e.returnValue='';}};
+    window.addEventListener('beforeunload',this.onUnload);
+  }
+  componentWillUnmount(){clearInterval(this.poll);clearInterval(this.iv);clearInterval(this.mockIv);clearTimeout(this.tt);window.removeEventListener('beforeunload',this.onUnload);}
+  applyTheme(t){try{document.documentElement.setAttribute('data-theme',t);const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='dark'?'#16181b':'#fbfbfc');}catch(e){}}
+  toast(m){this.setState({toast:m});clearTimeout(this.tt);this.tt=setTimeout(()=>this.setState({toast:null}),2600);}
+  async load(){
+    try{
+      let d;
+      if(MOCK){
+        if(this.state.data)return;
+        try{d=await api('GET','/static/mock/state.json');}catch(e){d=await api('GET','/static/mock/state_m.json');}
+      }else d=await api('GET','/api/state');
+      if(!d||typeof d!=='object')throw new Error('bad state');
+      if(this.offline){this.offline=false;}
+      this.setState({data:{...EMPTY,...d}});
+    }catch(e){
+      console.warn('[mobile] state load failed',e);
+      if(!this.offline){this.offline=true;this.toast('Нет связи с сервером — показываю последние данные');}
+    }
+  }
+  todayDate(){const d=this.state.data;const t=(d&&(d.today||(d.settings&&d.settings.today)))||isoOf(new Date());return parse(t);}
+  patchTask(id,patch){this.setState(s=>({data:{...s.data,tasks:(s.data.tasks||[]).map(x=>x.id===id?{...x,...patch}:x)}}));}
+  go(patch){const top=()=>{try{const el=document.querySelector('.hx-scroll');if(el)el.scrollTop=0;}catch(e){}};this.setState(patch,top);}
+  openTask(id,from){this.go({screen:'task',taskId:id,prev:from||'tasks'});}
+  dec(t,T,from){
+    const done=t.status==='done',d=t.due?parse(t.due):null,diff=d?Math.round((d-T)/864e5):null;
+    const over=!done&&d!==null&&diff<0,key=done?'done':over?'overdue':'work';
+    const S={work:['В работе','var(--soft)','var(--ink)'],overdue:['Просрочено','var(--accentSoft)','var(--accent)'],done:['Выполнено','var(--okSoft)','var(--ok)']}[key];
+    const rel=d===null?'':diff<0?`просрочено на ${-diff} ${plural(-diff)}`:diff===0?'сегодня':`через ${diff} ${plural(diff)}`;
+    const dueDetail=done?'Выполнено':rel;
+    const owner=t.owner_short||t.owner||'Не назначен';
+    return {...t,key,diff,owner,
+      ownerFull:[t.owner||'Не назначен'].concat(t.co_owners||[]).join(', '),
+      ini:t.ini||initials(t.owner),color:hueCol(t.hue),meeting:t.meeting_title||'',
+      meetingLine:[t.meeting_title,t.meeting_date?(()=>{const md=parse(t.meeting_date);return `${md.getDate()} ${MONTHS[md.getMonth()]}`;})():''].filter(Boolean).join(' · ')||'—',
+      curator:t.issued_by||'—',dir:t.direction||'Другое',isHigh:t.priority==='high',
+      hasQuote:!!t.quote,t:t.t||'',
+      dueFmt:d?`${d.getDate()} ${MONTHS[d.getMonth()]}`:(t.deadline_raw||'без срока'),
+      dueSep:dueDetail?' · ':'',dueDetail,
+      dueLabel:done?'Выполнено':d===null?(t.deadline_raw||'без срока'):rel,
+      dueColor:done?'var(--ok)':over?'var(--accent)':(d!==null&&diff<=3)?'var(--warn)':'var(--ink2)',
+      sLabel:S[0],sBg:S[1],sFg:S[2],onClick:()=>this.openTask(t.id,from)};
+  }
+  async toggleDone(){
+    const id=this.state.taskId,t=((this.state.data||EMPTY).tasks||[]).find(x=>x.id===id);if(!t)return;
+    const status=t.status==='done'?'work':'done',old=t.status;
+    this.patchTask(id,{status});
+    this.toast(status==='done'?'Поручение отмечено выполненным':'Поручение возвращено в работу');
+    if(MOCK)return;
+    try{const r=await api('PATCH',`/api/tasks/${id}`,{status});if(r&&typeof r==='object'&&r.id!=null)this.patchTask(id,r);}
+    catch(e){console.warn(e);this.patchTask(id,{status:old});this.toast('Не удалось сохранить изменение');}
+  }
+  liveTitleFor(){const T=this.todayDate(),n=new Date();return `Совещание ${pad(T.getDate())}.${pad(T.getMonth()+1)}.${T.getFullYear()}, ${pad(n.getHours())}:${pad(n.getMinutes())}`;}
+  consent(){try{const a=new Audio('/static/consent.mp3');const p=a.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+  async startLive(){
+    const s=this.state;
+    if(s.live||s.starting){this.setState({screen:'live'});return;}
+    const title=this.liveTitleFor();
+    this.setState({starting:true,screen:'live',segs:[],sec:0,paused:false,liveTitle:title});
+    if(MOCK){this.beginMock();return;}
+    let stream;
+    try{
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('insecure');
+      stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+    }catch(e){
+      console.warn('[mobile] mic',e);
+      this.setState({starting:false,screen:'home'});
+      this.toast(e&&e.message==='insecure'?'Микрофон доступен только по HTTPS или localhost':'Нет доступа к микрофону');
+      return;
+    }
+    let id;
+    try{const r=await api('POST','/api/live/start',{title,notify:true,source:'mic'});id=r&&r.id;if(id==null)throw new Error('no id');}
+    catch(e){
+      console.warn('[mobile] live/start',e);stream.getTracks().forEach(t=>t.stop());
+      this.setState({starting:false,screen:'home'});this.toast('Не удалось начать запись: сервер недоступен');return;
+    }
+    this.stream=stream;this.liveId=id;this.q=Promise.resolve();this.chunkN=0;this.chunkErr=false;
+    const mime=pickMime();this.ext=mime.includes('mp4')?'mp4':mime.includes('ogg')?'ogg':'webm';
+    let rec;
+    try{rec=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);}
+    catch(e){console.warn(e);stream.getTracks().forEach(t=>t.stop());this.setState({starting:false,screen:'home'});this.toast('Браузер не поддерживает запись звука');return;}
+    rec.ondataavailable=e=>{if(e.data&&e.data.size)this.enqueue(e.data);};
+    this.rec=rec;
+    this.consent();
+    rec.start(4000);
+    this.setState({starting:false,live:true});
+    this.toast('Участники уведомлены о записи');
+  }
+  enqueue(blob){
+    const id=this.liveId,n=++this.chunkN,ext=this.ext;
+    this.q=this.q.then(async()=>{
+      for(let attempt=0;attempt<3;attempt++){
+        try{
+          const fd=new FormData();fd.append('chunk',blob,`chunk_${String(n).padStart(4,'0')}.${ext}`);
+          const r=await api('POST',`/api/live/${id}/chunk`,fd);
+          const segs=(r&&r.segments)||[];
+          if(segs.length&&this.liveId===id)this.setState(s=>({segs:s.segs.concat(segs)}));
+          return;
+        }catch(e){console.warn('[mobile] chunk',n,e);await new Promise(r=>setTimeout(r,800));}
+      }
+      if(!this.chunkErr){this.chunkErr=true;this.toast('Часть записи не отправлена — проверьте связь');}
+    });
+  }
+  beginMock(){
+    this.setState({starting:false,live:true});this.toast('Участники уведомлены о записи');
+    let i=0;clearInterval(this.mockIv);
+    this.mockIv=setInterval(()=>{
+      if(!this.state.live){clearInterval(this.mockIv);return;}
+      if(this.state.paused)return;
+      if(i>=MOCK_SEGS.length){clearInterval(this.mockIv);return;}
+      const x=MOCK_SEGS[i++];this.setState(s=>({segs:s.segs.concat([{...x,t:'00:'+mmss(s.sec)}])}));
+    },4000);
+  }
+  togglePause(){
+    const s=this.state;if(!s.live)return;
+    const rec=this.rec;
+    try{if(rec){if(s.paused&&rec.state==='paused')rec.resume();else if(!s.paused&&rec.state==='recording')rec.pause();}}catch(e){console.warn(e);}
+    this.setState({paused:!s.paused});
+  }
+  async stopLive(){
+    const s=this.state;
+    if(!s.live){this.setState({screen:'home',starting:false});return;}
+    const title=s.liveTitle,sec=s.sec;
+    this.setState({live:false,paused:false,screen:'home',segs:[]});
+    this.toast('Протокол формируется… Пришлём уведомление');
+    if(MOCK){
+      clearInterval(this.mockIv);
+      const T=this.todayDate();
+      this.setState(st=>({data:{...st.data,meetings:[{id:Date.now(),title,date:isoOf(T),date_label:`${T.getDate()} ${MONTHS[T.getMonth()]}`,duration_s:sec,source:'mic',source_label:'Микрофон',status:'processing',step:0,pct:5,step_label:'Сохранение и декодирование аудио',tasks_count:0}].concat(st.data.meetings||[])}}));
+      return;
+    }
+    const id=this.liveId,rec=this.rec;this.rec=null;
+    if(rec&&rec.state!=='inactive'){
+      await new Promise(res=>{rec.addEventListener('stop',()=>res(),{once:true});try{rec.stop();}catch(e){res();}setTimeout(res,3000);});
+    }
+    if(this.stream){this.stream.getTracks().forEach(t=>t.stop());this.stream=null;}
+    try{await this.q;}catch(e){}
+    this.liveId=null;
+    try{await api('POST',`/api/live/${id}/stop`);}catch(e){console.warn(e);this.toast('Не удалось завершить запись на сервере');}
+    this.load();
+  }
+  segEl(x,i){
+    const E=React.createElement;
+    return E('div',{key:'seg'+i,style:{padding:'12px 14px',borderRadius:14,background:'var(--surface)',border:'1px solid var(--line)',display:'flex',flexDirection:'column',gap:4,animation:'hin .4s ease'}},
+      E('div',{style:{display:'flex',alignItems:'center',gap:8,fontSize:12}},
+        E('span',{style:{width:8,height:8,borderRadius:'50%',background:x.hue!=null?hueCol(x.hue):'var(--accent)'}}),
+        E('span',{style:{fontWeight:500}},x.name||'Речь'),
+        E('span',{style:{fontFamily:"'IBM Plex Mono',monospace",color:'var(--ink3)'}},[x.t,x.l].filter(Boolean).join(' · '))),
+      E('div',{style:{fontSize:14,textWrap:'pretty'}},x.x||''),
+      x.task?E('div',{style:{alignSelf:'flex-start',padding:'3px 8px',borderRadius:6,background:'var(--warnSoft)',fontSize:12}},'Поручение · '+x.task):null);
+  }
+  renderVals(){
+    const s=this.state,theme=s.theme||this.props.theme||'light';
+    const D=s.data||EMPTY,T=this.todayDate(),todayIso=isoOf(T);
+    const from=s.screen==='task'?s.prev:s.screen;
+    const tasks=(D.tasks||[]).map(t=>this.dec(t,T,from==='task'?'tasks':from));
+    const cnt=k=>tasks.filter(t=>t.key===k).length;
+    const task=tasks.find(t=>t.id===s.taskId)||{};
+    const byDue=(a,b)=>(a.due||'9999')<(b.due||'9999')?-1:(a.due||'9999')>(b.due||'9999')?1:0;
+    const pulseDot=React.createElement('span',{style:{width:10,height:10,borderRadius:'50%',background:'var(--accent)',flexShrink:0,display:'inline-block',animation:s.paused||!s.live?'none':'hpulse 1.4s infinite'}});
+    const wave=React.createElement('div',{style:{display:'flex',alignItems:'center',gap:4,height:40}},Array.from({length:22},(_,i)=>React.createElement('span',{key:i,style:{width:3,height:40,borderRadius:2,background:'var(--accent)',transform:'scaleY(.25)',animation:s.paused||!s.live?'none':`hwave ${0.7+(i*37%9)/10}s ${(i*13%7)/10}s infinite ease-in-out`}})));
+    const tab=k=>s.screen===k||(k==='tasks'&&s.screen==='task'&&s.prev==='tasks')||(k==='notif'&&s.screen==='task'&&s.prev==='notif')||(k==='home'&&s.screen==='task'&&s.prev==='home')?'var(--ink)':'var(--ink3)';
+    const settings=D.settings||{};
+    const name=settings.user_name||settings.name||'Секретарь';
+    const hr=s.now.getHours();
+    const greet=hr<5?'Доброй ночи':hr<12?'Доброе утро':hr<18?'Добрый день':'Добрый вечер';
+    const urgent=tasks.filter(t=>t.key==='overdue'||(t.key==='work'&&t.diff!==null&&t.diff<=4)).sort((a,b)=>a.diff-b.diff).slice(0,3);
+    const meetings=(D.meetings||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.id>a.id?1:-1)).slice(0,5).map(m=>{
+      const proc=m.status==='processing'||m.status==='queued',err=m.status==='error';
+      const md=m.date?parse(m.date):null;
+      const dl=m.date===todayIso?'Сегодня':(m.date_label||(md?`${md.getDate()} ${MONTHS[md.getMonth()]}`:''));
+      const meta=proc?[dl,m.step_label||(m.status==='queued'?'В очереди':'Обработка')].filter(Boolean).join(' · '):err?[dl,'Ошибка обработки'].filter(Boolean).join(' · '):[dl,durFmt(m.duration_s,m.dur_label),m.source_label].filter(Boolean).join(' · ');
+      const right=proc?`${Math.round(m.pct||0)}%`:err?'ошибка':`${m.tasks_count||0} поруч.`;
+      return {title:m.title||'Совещание',meta,right,rightColor:proc?'var(--warn)':err?'var(--accent)':'var(--ink3)'};
+    });
+    const listed=tasks.filter(t=>t.key===s.f).sort(byDue);
+    const notifs=(D.notifications||[]).slice().sort((a,b)=>String(b.created||'').localeCompare(String(a.created||''))||(b.id-a.id)).map(n=>{
+      const cd=n.created?String(n.created).slice(0,10):'';
+      const when=cd&&cd!==todayIso&&/^\d{1,2}:\d{2}$/.test(String(n.time||''))?`${parse(cd).getDate()} ${MONTHS[parse(cd).getMonth()]} · ${n.time||''}`:(n.time||'');
+      return {...n,when,dot:n.type==='over'?'var(--accent)':(n.type==='soon'||n.type==='today')?'var(--warn)':'var(--ink3)',
+        onClick:()=>{if(n.task_id!=null&&tasks.some(t=>t.id===n.task_id))this.openTask(n.task_id,'notif');}};
+    });
+    const unread=(D.notifications||[]).filter(n=>!n.read).length;
+    const fLabels={work:'В работе',overdue:'Просрочено',done:'Выполнено'};
+    return {
+      theme,toggleTheme:()=>{const t=theme==='dark'?'light':'dark';LS.set('hx-theme',t);this.applyTheme(t);this.setState({theme:t});},
+      clock:`${s.now.getHours()}:${pad(s.now.getMinutes())}`,
+      avatar:initials(name),greeting:`${greet}, ${name}`,dateLine:`${WDAYS[T.getDay()]}, ${T.getDate()} ${MONTHS_G[T.getMonth()]}`,
+      mockNote:MOCK?' · демо-данные (mock=1)':'',
+      isHome:s.screen==='home',isLive:s.screen==='live',isTasks:s.screen==='tasks',isTask:s.screen==='task',isNotif:s.screen==='notif',showTabs:s.screen!=='live',
+      homeFg:tab('home'),tasksFg:tab('tasks'),notifFg:tab('notif'),hasUnread:unread>0,
+      goHome:()=>this.go({screen:'home'}),goTasks:()=>this.go({screen:'tasks'}),goNotif:()=>this.go({screen:'notif'}),goLive:()=>this.go({screen:'live'}),
+      backFromTask:()=>this.go({screen:s.prev||'tasks'}),backLabel:s.prev==='notif'?'← Уведомления':s.prev==='home'?'← Главная':'← Поручения',
+      startLive:()=>this.startLive(),recLabel:s.live?'Открыть запись':'Начать запись',recRadius:s.live?'4px':'50%',
+      togglePause:()=>this.togglePause(),pauseLabel:s.paused?'Продолжить':'Пауза',
+      stopLive:()=>this.stopLive(),
+      live:s.live||s.starting,pillLabel:s.starting?'Подключение…':s.paused?'Запись на паузе':'Идёт запись',timer:mmss(s.sec),pulseDot,wave,
+      liveTitle:s.starting?'Подключение микрофона…':(s.liveTitle||'Совещание'),
+      consentLine:'Участники уведомлены о записи · обработка локальная',
+      noSegs:s.segs.length===0,noSegsText:s.starting?'Ожидаем доступ к микрофону…':'Говорите — расшифровка появится через несколько секунд',
+      liveList:s.segs.map((x,i)=>this.segEl(x,i)).reverse(),
+      stats:[['overdue','Просрочено','var(--accent)'],['work','В работе','var(--ink)'],['done','Выполнено','var(--ok)']].map(([k,label,color])=>({n:cnt(k),label,color,onClick:()=>this.go({screen:'tasks',f:k})})),
+      urgent,noUrgent:urgent.length===0,noUrgentText:s.data?'Срочных поручений нет':'Загрузка…',
+      meetings,noMeetings:!!s.data&&meetings.length===0,
+      filters:[['work','В работе'],['overdue','Просрочено'],['done','Выполнено']].map(([k,label])=>({label,bg:s.f===k?'var(--surface)':'transparent',fg:s.f===k?'var(--ink)':'var(--ink3)',onClick:()=>this.setState({f:k})})),
+      tasks:listed,noTasks:listed.length===0,noTasksText:`Нет поручений в статусе «${fLabels[s.f]}»`,task,
+      doneLabel:task.status==='done'?'Вернуть в работу':'Отметить выполненным',
+      toggleDone:()=>this.toggleDone(),
+      notifs,noNotifs:notifs.length===0,
+      hasToast:!!s.toast,toast:s.toast||''
+    };
+  }
+}
+</script>
+</body>
+</html>

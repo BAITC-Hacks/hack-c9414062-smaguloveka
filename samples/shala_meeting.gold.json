@@ -1,0 +1,98 @@
+{
+ "meetings": [
+  {
+   "number": "shala_meeting",
+   "title": "Планёрка: бюджет, график отпусков, охрана труда (синтетическая запись, RU+KZ шала)",
+   "date": "2026-09-23",
+   "chair": "Бауыржан Асқарович",
+   "participants": [
+    {
+     "name": "Бауыржан Асқарович",
+     "role": "председатель, заместитель генерального директора",
+     "present": true
+    },
+    {
+     "name": "Динара Серікқызы",
+     "role": "директор по финансам",
+     "present": true
+    },
+    {
+     "name": "Айгерім Бекқызы",
+     "role": "руководитель службы персонала",
+     "present": true
+    },
+    {
+     "name": "Марат Нурланович",
+     "role": "начальник производства",
+     "present": true
+    }
+   ],
+   "languages": [
+    "RU",
+    "RU+KZ"
+   ]
+  }
+ ],
+ "tasks": [
+  {
+   "id": "SH-T01",
+   "meeting": "shala_meeting",
+   "description": "Подготовить обоснование на дополнительные три миллиона тенге на ремонт",
+   "description_alt": "Дайындаңыз обоснование на дополнительные три миллиона",
+   "assignee": "Динара Серікқызы",
+   "assignee_kind": "person_present",
+   "co_assignees": [],
+   "issued_by": "Бауыржан Асқарович",
+   "deadline_raw": "до пятницы",
+   "deadline_kind": "relative_week",
+   "deadline_iso": "2026-09-25",
+   "source_quote": "Динара Серікқызы, дайындаңыз обоснование на дополнительные три миллиона, до пятницы.",
+   "appears_in_protocol_table": true
+  },
+  {
+   "id": "SH-T02",
+   "meeting": "shala_meeting",
+   "description": "Передать данные производства для графика отпусков Айгерім Бекқызы",
+   "description_alt": "Мәліметті Айгерімге жіберу",
+   "assignee": "Марат Нурланович",
+   "assignee_kind": "person_present",
+   "co_assignees": [],
+   "issued_by": "Бауыржан Асқарович",
+   "deadline_raw": "ертеңге дейін",
+   "deadline_kind": "relative_day",
+   "deadline_iso": "2026-09-24",
+   "source_quote": "Марат, мәліметті ертеңге дейін Айгерімге жіберіңіз.",
+   "appears_in_protocol_table": true
+  },
+  {
+   "id": "SH-T03",
+   "meeting": "shala_meeting",
+   "description": "Разослать график отпусков всем руководителям",
+   "description_alt": "Кестені всем руководителям жіберу",
+   "assignee": "Айгерім Бекқызы",
+   "assignee_kind": "person_present",
+   "co_assignees": [],
+   "issued_by": "Бауыржан Асқарович",
+   "deadline_raw": "до конца недели",
+   "deadline_kind": "relative_week",
+   "deadline_iso": "2026-09-25",
+   "source_quote": "Айгерім, после этого кестені всем руководителям жіберіңіз до конца недели.",
+   "appears_in_protocol_table": true
+  },
+  {
+   "id": "SH-T04",
+   "meeting": "shala_meeting",
+   "description": "Организовать обучение по охране труда для сотрудников, не прошедших обучение (около 40 человек), и направить отчёт",
+   "description_alt": "Организуйте обучение для них, отчет маған жіберіңіз",
+   "assignee": "Марат Нурланович",
+   "assignee_kind": "person_present",
+   "co_assignees": [],
+   "issued_by": "Бауыржан Асқарович",
+   "deadline_raw": "до пятнадцатого октября",
+   "deadline_kind": "absolute_date",
+   "deadline_iso": "2026-10-15",
+   "source_quote": "Марат, организуйте обучение для них до пятнадцатого октября. Отчет маған жіберіңіз.",
+   "appears_in_protocol_table": true
+  }
+ ]
+}

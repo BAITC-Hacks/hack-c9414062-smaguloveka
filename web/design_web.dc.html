@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0}*{box-sizing:border-box}
+:root,[data-theme="light"]{--bg:oklch(0.985 0.002 250);--surface:#fff;--soft:oklch(0.965 0.003 250);--line:oklch(0.92 0.004 250);--ink:oklch(0.23 0.006 250);--ink2:oklch(0.47 0.006 250);--ink3:oklch(0.62 0.006 250);--accent:oklch(0.61 0.21 27);--accentSoft:oklch(0.955 0.025 27);--ok:oklch(0.56 0.12 155);--okSoft:oklch(0.955 0.03 155);--warn:oklch(0.6 0.13 70);--warnSoft:oklch(0.96 0.035 80);--inv:oklch(0.23 0.006 250);--invInk:#fff;--shade:oklch(0.2 0.01 250 / 0.28)}
+[data-theme="dark"]{--bg:oklch(0.165 0.004 250);--surface:oklch(0.2 0.005 250);--soft:oklch(0.245 0.005 250);--line:oklch(0.3 0.006 250);--ink:oklch(0.95 0.003 250);--ink2:oklch(0.75 0.005 250);--ink3:oklch(0.6 0.006 250);--accent:oklch(0.67 0.19 27);--accentSoft:oklch(0.29 0.06 27);--ok:oklch(0.74 0.12 155);--okSoft:oklch(0.29 0.045 155);--warn:oklch(0.8 0.12 75);--warnSoft:oklch(0.31 0.045 75);--inv:oklch(0.95 0.003 250);--invInk:oklch(0.17 0.004 250);--shade:oklch(0 0 0 / 0.5)}
+a{color:var(--ink);text-decoration:none}a:hover{color:var(--accent)}
+input,button,select{font-family:inherit}
+@keyframes hpulse{0%{box-shadow:0 0 0 0 oklch(0.61 0.21 27 / 0.55)}100%{box-shadow:0 0 0 9px oklch(0.61 0.21 27 / 0)}}
+@keyframes hwave{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+@keyframes hin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="display:flex;min-height:100vh;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.45">
+
+<aside style="width:244px;flex-shrink:0;border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;padding:20px 14px;gap:20px;position:sticky;top:0;height:100vh;overflow-y:auto">
+  <div style="display:flex;align-items:center;gap:10px;padding:0 8px;flex-shrink:0">
+    <div style="width:26px;height:26px;border-radius:7px;background:var(--inv);display:flex;align-items:center;justify-content:center"><div style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></div></div>
+    <div style="font-weight:600;font-size:16px;letter-spacing:-0.01em">AI Hatshy</div>
+  </div>
+  <sc-if value="{{canRecord}}" hint-placeholder-val="{{true}}">
+    <button onClick="{{openNew}}" style="flex-shrink:0;height:38px;border-radius:9px;border:none;background:var(--inv);color:var(--invInk);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="opacity:0.88">
+      <span style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></span>{{t.newMeeting}}
+    </button>
+  </sc-if>
+  <nav style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="5">
+      <button onClick="{{n.onClick}}" style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px;border-radius:8px;border:none;background:{{n.bg}};color:{{n.fg}};font-size:14px;font-weight:{{n.fw}};cursor:pointer;text-align:left" style-hover="background:var(--soft)">
+        <span>{{n.label}}</span>
+        <sc-if value="{{n.hasBadge}}" hint-placeholder-val="{{false}}"><span style="min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:{{n.badgeBg}};color:{{n.badgeFg}};font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center">{{n.badge}}</span></sc-if>
+      </button>
+    </sc-for>
+  </nav>
+  <sc-if value="{{showLiveMini}}" hint-placeholder-val="{{false}}">
+    <button onClick="{{goLive}}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--accentSoft);color:var(--ink);cursor:pointer;font-size:13px;text-align:left">
+      {{pulseDot}}<span style="flex:1">Идёт запись</span><span style="font-family:'IBM Plex Mono',monospace">{{timer}}</span>
+    </button>
+  </sc-if>
+  <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px;flex-shrink:0">
+    <div style="padding:10px 12px;border-radius:9px;background:var(--soft);font-size:12px;color:var(--ink2);display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:6px;color:var(--ink);font-weight:500"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Закрытый контур</div>
+      <div>Аудио и текст не покидают сервер</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1;display:flex;padding:3px;border-radius:8px;background:var(--soft);gap:2px">
+        <sc-for list="{{langs}}" as="l" hint-placeholder-count="3">
+          <button onClick="{{l.onClick}}" style="flex:1;height:26px;border:none;border-radius:6px;background:{{l.bg}};color:{{l.fg}};font-size:12px;font-weight:500;cursor:pointer">{{l.label}}</button>
+        </sc-for>
+      </div>
+      <button onClick="{{toggleTheme}}" title="Тема" style="width:32px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center"><span style="width:12px;height:12px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+    </div>
+    <button onClick="{{cycleRole}}" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:9px;border:none;background:transparent;color:var(--ink);cursor:pointer;text-align:left" style-hover="background:var(--soft)">
+      <span style="width:32px;height:32px;border-radius:50%;background:{{me.color}};color:#fff;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{me.ini}}</span>
+      <span style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:500;font-size:13px">{{me.name}}</span><span style="font-size:12px;color:var(--ink2)">{{roleLabel}} · сменить</span></span>
+    </button>
+    <a href="AI Hatshy Mobile.dc.html" style="font-size:12px;color:var(--ink2);padding:0 8px">Мобильная версия →</a>
+  </div>
+</aside>
+
+<main style="flex:1;min-width:0;padding:28px 36px 60px">
+
+<sc-if value="{{isMeetings}}" hint-placeholder-val="{{true}}">
+<div style="max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em">{{t.meetings}}</h1>
+      <div style="color:var(--ink2);margin-top:4px">Сентябрь 2026 · 6 совещаний · 34 поручения</div>
+    </div>
+    <input value="{{q}}" onChange="{{onQ}}" placeholder="Поиск по названию и участникам" style="width:300px;max-width:100%;height:38px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;outline:none">
+  </div>
+  <sc-if value="{{showLiveBanner}}" hint-placeholder-val="{{false}}">
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:var(--accentSoft);border:1px solid var(--line)">
+      {{pulseDot}}
+      <div style="flex:1"><div style="font-weight:500">{{liveTitle}}</div><div style="font-size:13px;color:var(--ink2)">Бот ведёт запись в {{platform}} · {{timer}}</div></div>
+      <button onClick="{{goLive}}" style="height:34px;padding:0 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-weight:500;cursor:pointer">Открыть трансляцию</button>
+    </div>
+  </sc-if>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <sc-for list="{{mfilters}}" as="f" hint-placeholder-count="3">
+      <button onClick="{{f.onClick}}" style="height:32px;padding:0 12px;border-radius:16px;border:1px solid {{f.border}};background:{{f.bg}};color:{{f.fg}};font-size:13px;cursor:pointer">{{f.label}}</button>
+    </sc-for>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto">
+    <div style="display:grid;min-width:940px;grid-template-columns:minmax(0,2.6fr) 110px 80px 130px 110px 90px 130px;gap:16px;padding:10px 18px;font-size:12px;color:var(--ink3);border-bottom:1px solid var(--line)">
+      <div>Совещание</div><div>Дата</div><div>Длит.</div><div>Участники</div><div>Языки</div><div>Поручения</div><div>Статус</div>
+    </div>
+    <sc-for list="{{meetings}}" as="m" hint-placeholder-count="6">
+      <div onClick="{{m.onClick}}" style="display:grid;min-width:940px;grid-template-columns:minmax(0,2.6fr) 110px 80px 130px 110px 90px 130px;gap:16px;padding:14px 18px;align-items:center;border-bottom:1px solid var(--line);cursor:pointer" style-hover="background:var(--soft)">
+        <div style="min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{m.title}}</div><div style="font-size:12px;color:var(--ink2)">{{m.source}}</div></div>
+        <div style="color:var(--ink2)">{{m.date}}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink2)">{{m.dur}}</div>
+        <div style="display:flex">
+          <sc-for list="{{m.av}}" as="a" hint-placeholder-count="3"><span style="width:26px;height:26px;margin-right:-6px;border-radius:50%;border:2px solid var(--surface);background:{{a.color}};color:#fff;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center">{{a.ini}}</span></sc-for>
+          <sc-if value="{{m.hasMore}}" hint-placeholder-val="{{false}}"><span style="width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);background:var(--soft);color:var(--ink2);font-size:10px;display:flex;align-items:center;justify-content:center">+{{m.more}}</span></sc-if>
+        </div>
+        <div style="font-size:12px;color:var(--ink2);font-family:'IBM Plex Mono',monospace">{{m.langs}}</div>
+        <div>{{m.tasks}}</div>
+        <div><span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;background:{{m.sBg}};color:{{m.sFg}};font-size:12px;font-weight:500">{{m.status}}</span></div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isLive}}" hint-placeholder-val="{{false}}">
+<div style="max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    {{pulseDot}}
+    <div style="flex:1;min-width:220px">
+      <div style="font-size:18px;font-weight:600;letter-spacing:-0.01em">{{liveTitle}}</div>
+      <div style="font-size:13px;color:var(--ink2);display:flex;gap:10px;flex-wrap:wrap;margin-top:2px"><span>{{platform}} · бот подключён</span><span>·</span><span>{{liveState}}</span></div>
+    </div>
+    {{wave}}
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:500;min-width:110px;text-align:right">{{timer}}</div>
+    <div style="display:flex;gap:8px">
+      <button onClick="{{togglePause}}" style="height:38px;padding:0 16px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:500;cursor:pointer">{{pauseLabel}}</button>
+      <button onClick="{{stopLive}}" style="height:38px;padding:0 16px;border-radius:9px;border:none;background:var(--accent);color:#fff;font-weight:500;cursor:pointer">Завершить и сформировать протокол</button>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--soft);font-size:13px;color:var(--ink2)">
+    <span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>
+    Участники уведомлены: в чат отправлено сообщение о записи и ИИ-транскрибации (RU/KZ). Обработка локальная.
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+    <div style="flex:3 1 480px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column">
+      <div style="padding:14px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:500">Транскрипт в реальном времени</div>
+        <div style="font-size:12px;color:var(--ink3);font-family:'IBM Plex Mono',monospace">RU · KZ · RU+KZ</div>
+      </div>
+      <div ref="{{trRef}}" style="height:520px;overflow-y:auto;padding:8px 20px 20px;display:flex;flex-direction:column">
+        <div style="padding:12px 0;font-size:13px;color:var(--ink3);border-bottom:1px dashed var(--line)">AI Hatshy: Назар аударыңыздар, кеңес жазылып, ИИ арқылы транскрипцияланады. Внимание, совещание записывается.</div>
+        <sc-for list="{{liveSegs}}" as="s" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:62px minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:1px solid var(--line);animation:hin .4s ease">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3);padding-top:2px">{{s.t}}</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:8px;height:8px;border-radius:50%;background:{{s.color}}"></span><span style="font-weight:500">{{s.name}}</span><span style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--ink3);border:1px solid var(--line);border-radius:4px;padding:0 5px">{{s.l}}</span></div>
+              <div style="text-wrap:pretty">{{s.x}}</div>
+              <sc-if value="{{s.hasTask}}" hint-placeholder-val="{{false}}"><div style="align-self:flex-start;display:flex;gap:6px;align-items:center;margin-top:2px;padding:4px 10px;border-radius:6px;background:var(--warnSoft);font-size:12px;color:var(--ink)"><span style="font-weight:500">Поручение</span><span style="color:var(--ink2)">{{s.taskHint}}</span></div></sc-if>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{listening}}" hint-placeholder-val="{{true}}"><div style="padding:14px 0;color:var(--ink3);font-size:13px">Слушаю…</div></sc-if>
+      </div>
+    </div>
+    <div style="flex:1 1 320px;max-width:100%;display:flex;flex-direction:column;gap:20px">
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between"><div style="font-weight:500">Обнаруженные поручения</div><div style="color:var(--ink3)">{{liveTaskCount}}</div></div>
+        <sc-if value="{{noLiveTasks}}" hint-placeholder-val="{{true}}"><div style="font-size:13px;color:var(--ink3)">Появятся здесь, когда в речи прозвучит кто, что и к какому сроку.</div></sc-if>
+        <sc-for list="{{liveTasks}}" as="k" hint-placeholder-count="1">
+          <div style="padding:10px 12px;border-radius:9px;background:var(--soft);display:flex;flex-direction:column;gap:6px;animation:hin .4s ease">
+            <div style="font-weight:500;font-size:13px;text-wrap:pretty">{{k.title}}</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink2)"><span>{{k.ownerShort}}</span><span>до {{k.dueFmt}}</span></div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-weight:500">Говорящие · диаризация</div>
+        <sc-for list="{{liveSpeakers}}" as="p" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:{{p.color}}"></span>{{p.name}}</span><span style="color:var(--ink3);font-family:'IBM Plex Mono',monospace;font-size:12px">{{p.pct}}%</span></div>
+            <div style="height:4px;border-radius:2px;background:var(--soft)"><div style="height:4px;border-radius:2px;width:{{p.pct}}%;background:{{p.color}};transition:width .4s"></div></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isProcessing}}" hint-placeholder-val="{{false}}">
+<div style="max-width:520px;margin:80px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:22px">
+  <div><div style="font-size:20px;font-weight:600;letter-spacing:-0.01em">Формируем протокол</div><div style="color:var(--ink2);margin-top:4px">{{liveTitle}} · все модели работают на локальном сервере</div></div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <sc-for list="{{procSteps}}" as="p" hint-placeholder-count="5">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:22px;height:22px;border-radius:50%;background:{{p.bg}};color:{{p.fg}};border:1px solid {{p.border}};font-size:12px;display:flex;align-items:center;justify-content:center">{{p.mark}}</span>
+        <span style="color:{{p.text}}">{{p.label}}</span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="height:4px;border-radius:2px;background:var(--soft)"><div style="height:4px;border-radius:2px;background:var(--inv);width:{{procPct}}%;transition:width .6s"></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{isProtocol}}" hint-placeholder-val="{{false}}">
+<div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <button onClick="{{goMeetings}}" style="align-self:flex-start;border:none;background:none;padding:0;color:var(--ink2);cursor:pointer;font-size:13px" style-hover="color:var(--ink)">← {{t.meetings}}</button>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap">
+    <div style="min-width:0">
+      <h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em;text-wrap:pretty">{{meeting.title}}</h1>
+      <div style="color:var(--ink2);margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><span style="white-space:nowrap">{{meeting.date}}, 10:00</span><span>·</span><span>{{meeting.dur}}</span><span>·</span><span>{{meeting.source}}</span><span>·</span><span>6 участников</span><span>·</span><span>RU / KZ / смешанная речь</span></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onClick="{{sendExtracts}}" style="height:38px;padding:0 16px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:500;cursor:pointer" style-hover="background:var(--soft)">Разослать выдержки</button>
+      <button onClick="{{openExport}}" style="height:38px;padding:0 16px;border-radius:9px;border:none;background:var(--inv);color:var(--invInk);font-weight:500;cursor:pointer">Экспорт PDF / DOCX</button>
+    </div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+    <div style="flex:3 1 520px;display:flex;flex-direction:column;gap:16px;min-width:0">
+      <div style="display:flex;gap:4px;border-bottom:1px solid var(--line)">
+        <sc-for list="{{ptabs}}" as="tb" hint-placeholder-count="2">
+          <button onClick="{{tb.onClick}}" style="height:38px;padding:0 14px;border:none;border-bottom:2px solid {{tb.border}};margin-bottom:-1px;background:none;color:{{tb.fg}};font-weight:500;font-size:14px;cursor:pointer">{{tb.label}}</button>
+        </sc-for>
+      </div>
+      <sc-if value="{{isSummary}}" hint-placeholder-val="{{true}}">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Краткое содержание</div>
+            <p style="margin:0;font-size:15px;line-height:1.6;text-wrap:pretty">Обсудили ход перехода на систему электронного документооборота, бюджет на лицензии, согласование договора с поставщиком и график обучения сотрудников. Пилот СЭД готов, миграция архива займёт ещё около двух недель. Выявлен дефицит бюджета на лицензии в размере 3 млн ₸. Следующее совещание назначено на 30 сентября, 10:00.</p>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Принятые решения</div>
+            <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px">
+              <li>Срок завершения миграции архива в СЭД — 7 октября.</li>
+              <li>Подготовить обоснование на увеличение бюджета лицензий с 18 до 21 млн ₸.</li>
+              <li>Договор с поставщиком согласовать с учётом замечаний по персональным данным.</li>
+              <li>Провести обучение 120 сотрудников по утверждённому графику.</li>
+            </ol>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:4px">
+              <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Повестка</div>
+              <sc-for list="{{topics}}" as="tp" hint-placeholder-count="5">
+                <button onClick="{{tp.onClick}}" style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border:none;border-bottom:1px solid var(--line);background:none;color:var(--ink);font-size:14px;text-align:left;cursor:pointer" style-hover="color:var(--accent)"><span>{{tp.label}}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3)">{{tp.t}}</span></button>
+              </sc-for>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Доля речи</div>
+              <sc-for list="{{speakers}}" as="p" hint-placeholder-count="6">
+                <div style="display:grid;grid-template-columns:130px minmax(0,1fr) 36px;gap:10px;align-items:center;font-size:13px">
+                  <span style="display:flex;align-items:center;gap:8px;white-space:nowrap"><span style="width:8px;height:8px;border-radius:50%;background:{{p.color}}"></span>{{p.short}}</span>
+                  <div style="height:4px;border-radius:2px;background:var(--soft)"><div style="height:4px;border-radius:2px;width:{{p.pct}}%;background:{{p.color}}"></div></div>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3);text-align:right">{{p.pct}}%</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{isTranscript}}" hint-placeholder-val="{{false}}">
+        <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--soft)">
+            <button onClick="{{togglePlay}}" style="width:34px;height:34px;border-radius:50%;border:none;background:var(--inv);color:var(--invInk);cursor:pointer;font-size:11px">{{playIcon}}</button>
+            <div style="flex:1;height:4px;border-radius:2px;background:var(--line);position:relative"><div style="position:absolute;left:0;top:0;height:4px;border-radius:2px;width:{{playPct}}%;background:var(--ink)"></div></div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink2)">{{playTime}} / 47:12</span>
+          </div>
+          <div style="padding:4px 20px 12px">
+            <sc-for list="{{segs}}" as="s" hint-placeholder-count="6">
+              <div style="display:grid;grid-template-columns:62px minmax(0,1fr);gap:12px;padding:12px 10px;margin:0 -10px;border-radius:8px;background:{{s.bg}};transition:background .3s">
+                <button onClick="{{s.seek}}" style="border:none;background:none;padding:2px 0 0;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3);cursor:pointer;align-self:start" style-hover="color:var(--accent)">{{s.t}}</button>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:8px;height:8px;border-radius:50%;background:{{s.color}}"></span><span style="font-weight:500">{{s.name}}</span><span style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--ink3);border:1px solid var(--line);border-radius:4px;padding:0 5px">{{s.l}}</span></div>
+                  <div style="text-wrap:pretty">{{s.x}}</div>
+                  <sc-if value="{{s.hasTask}}" hint-placeholder-val="{{false}}"><button onClick="{{s.openTask}}" style="align-self:flex-start;display:flex;gap:6px;align-items:center;margin-top:2px;padding:4px 10px;border-radius:6px;border:none;background:var(--warnSoft);font-size:12px;color:var(--ink);cursor:pointer"><span style="font-weight:500">Поручение</span><span style="color:var(--ink2)">{{s.taskHint}}</span></button></sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:1 1 340px;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;position:sticky;top:20px">
+      <div style="padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:500">Поручения · {{mtaskCount}}</div>
+        <button onClick="{{confirmAll}}" style="border:none;background:none;color:var(--ink2);font-size:13px;cursor:pointer" style-hover="color:var(--ink)">{{confirmAllLabel}}</button>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{mtasks}}" as="k" hint-placeholder-count="5">
+          <div style="padding:14px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px">
+            <button onClick="{{k.onClick}}" style="border:none;background:none;padding:0;text-align:left;color:var(--ink);font-weight:500;font-size:14px;cursor:pointer;text-wrap:pretty" style-hover="color:var(--accent)">{{k.title}}</button>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+              <span style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:50%;background:{{k.color}};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center">{{k.ini}}</span>{{k.ownerShort}}</span>
+              <span style="color:{{k.dueColor}}">{{k.dueFmt}}</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink3)">
+              <span style="font-family:'IBM Plex Mono',monospace">{{k.t}} · уверенность {{k.conf}}%</span>
+              <sc-if value="{{k.unconfirmed}}" hint-placeholder-val="{{true}}"><button onClick="{{k.confirm}}" style="height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12px;cursor:pointer" style-hover="background:var(--soft)">Подтвердить</button></sc-if>
+              <sc-if value="{{k.confirmed}}" hint-placeholder-val="{{false}}"><span style="color:var(--ok)">✓ Подтверждено</span></sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isTasks}}" hint-placeholder-val="{{false}}">
+<div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div><h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em">{{tasksTitle}}</h1><div style="color:var(--ink2);margin-top:4px">Из протоколов совещаний · сегодня 23 сентября</div></div>
+    <div style="display:flex;padding:3px;border-radius:9px;background:var(--soft);gap:2px">
+      <sc-for list="{{views}}" as="v" hint-placeholder-count="2"><button onClick="{{v.onClick}}" style="height:30px;padding:0 14px;border:none;border-radius:7px;background:{{v.bg}};color:{{v.fg}};font-size:13px;font-weight:500;cursor:pointer">{{v.label}}</button></sc-for>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <input value="{{tq}}" onChange="{{onTq}}" placeholder="Поиск по поручениям" style="width:220px;max-width:100%;height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;outline:none">
+    <sc-for list="{{fsel}}" as="f" hint-placeholder-count="5">
+      <label style="display:flex;align-items:center;gap:4px;height:36px;padding:0 4px 0 12px;border-radius:9px;border:1px solid {{f.border}};background:var(--surface);font-size:13px;color:var(--ink3);max-width:100%">{{f.label}}
+        <select key="{{f.rk}}" onChange="{{f.onChange}}" style="border:none;background:transparent;color:var(--ink);font-size:13px;font-weight:500;height:32px;outline:none;cursor:pointer;max-width:180px">
+          <sc-for list="{{f.options}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}" selected="{{o.sel}}">{{o.l}}</option></sc-for>
+        </select>
+      </label>
+    </sc-for>
+    <sc-if value="{{hasFilters}}" hint-placeholder-val="{{false}}"><button onClick="{{resetFilters}}" style="height:36px;padding:0 12px;border-radius:9px;border:none;background:none;color:var(--ink2);font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px">Сбросить · {{activeN}}</button></sc-if>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+    <sc-for list="{{stats}}" as="st" hint-placeholder-count="4">
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:2px">
+        <div style="font-size:28px;font-weight:600;letter-spacing:-0.02em;color:{{st.color}}">{{st.n}}</div>
+        <div style="font-size:13px;color:var(--ink2)">{{st.label}}</div>
+      </div>
+    </sc-for>
+  </div>
+  <sc-if value="{{isDash}}" hint-placeholder-val="{{true}}">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-wrap:wrap;gap:16px">
+        <div style="flex:1 1 300px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Исполнительская дисциплина</div>
+          <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:48px;font-weight:600;letter-spacing:-0.03em;line-height:1">{{disc}}%</span><span style="color:var(--ink2);font-size:13px">поручений с наступившим сроком закрыты вовремя</span></div>
+          <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;background:var(--soft);margin-top:auto">
+            <sc-for list="{{statusBar}}" as="b" hint-placeholder-count="3"><div style="width:{{b.pct}}%;background:{{b.color}};transition:width .4s"></div></sc-for>
+          </div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <sc-for list="{{statusBar}}" as="b" hint-placeholder-count="3"><span style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2)"><span style="width:8px;height:8px;border-radius:2px;background:{{b.color}}"></span>{{b.label}} · {{b.n}}</span></sc-for>
+          </div>
+        </div>
+        <div style="flex:2 1 460px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Сроки на две недели</div>
+            <div style="display:flex;gap:12px;font-size:12px;color:var(--ink2)"><span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:var(--accent)"></span>Высокая</span><span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:var(--warn)"></span>Средняя</span><span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:var(--ink3)"></span>Низкая</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:4px">
+            <sc-for list="{{days}}" as="d" hint-placeholder-count="14">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0 6px;border-radius:8px;background:{{d.bg}}">
+                <div style="height:84px;width:100%;display:flex;flex-direction:column-reverse;align-items:center;gap:3px;padding:0 3px">
+                  <sc-for list="{{d.items}}" as="k" hint-placeholder-count="1"><span onClick="{{k.onClick}}" title="{{k.title}}" style="width:100%;max-width:28px;height:16px;border-radius:4px;background:{{k.bg}};cursor:pointer"></span></sc-for>
+                </div>
+                <div style="font-size:13px;font-weight:{{d.fw}};color:{{d.fg}}">{{d.n}}</div>
+                <div style="font-size:10px;color:var(--ink3)">{{d.wd}}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:16px">
+        <div style="flex:3 1 460px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Нагрузка по ответственным</div>
+          <sc-for list="{{load}}" as="o" hint-placeholder-count="5">
+            <div onClick="{{o.onClick}}" style="display:grid;grid-template-columns:150px minmax(0,1fr) 90px;gap:12px;align-items:center;cursor:pointer;font-size:13px" style-hover="opacity:0.8">
+              <span style="display:flex;align-items:center;gap:8px;white-space:nowrap"><span style="width:24px;height:24px;border-radius:50%;background:{{o.color}};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center">{{o.ini}}</span>{{o.name}}</span>
+              <div style="display:flex;gap:2px;height:12px;width:{{o.w}}%;border-radius:4px;overflow:hidden">
+                <sc-for list="{{o.segs}}" as="g" hint-placeholder-count="2"><div style="flex:{{g.n}};background:{{g.color}}"></div></sc-for>
+              </div>
+              <span style="text-align:right;color:var(--ink2)">{{o.total}} · <span style="color:{{o.overColor}}">{{o.over}} просроч.</span></span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex:2 1 300px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">По направлениям</div>
+          <sc-for list="{{dirStats}}" as="r" hint-placeholder-count="5">
+            <div onClick="{{r.onClick}}" style="display:flex;flex-direction:column;gap:5px;cursor:pointer;font-size:13px" style-hover="opacity:0.8">
+              <div style="display:flex;justify-content:space-between"><span>{{r.label}}</span><span style="color:var(--ink2);font-family:'IBM Plex Mono',monospace;font-size:12px">{{r.open}} / {{r.total}}</span></div>
+              <div style="height:6px;border-radius:3px;background:var(--soft)"><div style="height:6px;border-radius:3px;width:{{r.w}}%;background:var(--ink)"></div></div>
+            </div>
+          </sc-for>
+          <div style="font-size:12px;color:var(--ink3)">открытые / всего</div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Просроченные поручения</div><span style="color:var(--accent);font-weight:500">{{overN}}</span></div>
+        <sc-if value="{{noOverdue}}" hint-placeholder-val="{{false}}"><div style="font-size:13px;color:var(--ink2)">Просроченных поручений нет.</div></sc-if>
+        <sc-for list="{{overdueList}}" as="k" hint-placeholder-count="2">
+          <div onClick="{{k.onClick}}" style="display:flex;align-items:center;gap:14px;padding:10px 0;border-top:1px solid var(--line);cursor:pointer;flex-wrap:wrap">
+            <div style="flex:1;min-width:220px"><div style="font-weight:500">{{k.title}}</div><div style="font-size:12px;color:var(--ink3)">{{k.meeting}}</div></div>
+            <span style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:22px;height:22px;border-radius:50%;background:{{k.color}};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center">{{k.ini}}</span>{{k.ownerShort}}</span>
+            <span style="font-size:13px;color:var(--accent);min-width:150px">{{k.dueLabel}}</span>
+            <button onClick="{{k.remind}}" style="height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;cursor:pointer" style-hover="background:var(--soft)">Напомнить</button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{isBoard}}" hint-placeholder-val="{{false}}">
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start">
+      <sc-for list="{{columns}}" as="c" hint-placeholder-count="3">
+        <div style="background:var(--soft);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;min-height:200px">
+          <div style="display:flex;align-items:center;gap:8px;padding:4px 6px"><span style="width:8px;height:8px;border-radius:50%;background:{{c.color}}"></span><span style="font-weight:500">{{c.title}}</span><span style="color:var(--ink3)">{{c.count}}</span></div>
+          <sc-for list="{{c.items}}" as="k" hint-placeholder-count="2">
+            <div onClick="{{k.onClick}}" style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;cursor:pointer" style-hover="border-color:var(--ink3)">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px"><span style="padding:2px 7px;border-radius:4px;background:var(--soft);color:var(--ink2)">{{k.dir}}</span><span style="padding:2px 7px;border-radius:4px;background:{{k.prioBg}};color:{{k.prioFg}}">{{k.prio}}</span></div>
+              <div style="font-weight:500;text-wrap:pretty">{{k.title}}</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px">
+                <span style="display:flex;align-items:center;gap:6px;color:var(--ink2)"><span style="width:20px;height:20px;border-radius:50%;background:{{k.color}};color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center">{{k.ini}}</span>{{k.ownerShort}}</span>
+                <span style="color:{{k.dueColor}}">{{k.dueLabel}}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{isList}}" hint-placeholder-val="{{false}}">
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto">
+      <div style="display:grid;min-width:920px;grid-template-columns:minmax(0,2.4fr) 160px 110px 100px 150px 120px;gap:16px;padding:10px 18px;font-size:12px;color:var(--ink3);border-bottom:1px solid var(--line)"><div>Поручение</div><div>Ответственный</div><div>Направление</div><div>Срок</div><div>Осталось</div><div>Статус</div></div>
+      <sc-for list="{{flatTasks}}" as="k" hint-placeholder-count="6">
+        <div onClick="{{k.onClick}}" style="display:grid;min-width:920px;grid-template-columns:minmax(0,2.4fr) 160px 110px 100px 150px 120px;gap:16px;padding:13px 18px;align-items:center;border-bottom:1px solid var(--line);cursor:pointer" style-hover="background:var(--soft)">
+          <div style="min-width:0"><div style="font-weight:500">{{k.title}}</div><div style="font-size:12px;color:var(--ink3)">{{k.meeting}}</div></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:50%;background:{{k.color}};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center">{{k.ini}}</span>{{k.ownerShort}}</div>
+          <div style="color:var(--ink2)">{{k.dir}}</div>
+          <div>{{k.dueFmt}}</div>
+          <div style="color:{{k.dueColor}}">{{k.dueLabel}}</div>
+          <div><span style="height:24px;padding:0 10px;border-radius:12px;background:{{k.sBg}};color:{{k.sFg}};font-size:12px;font-weight:500;display:inline-flex;align-items:center">{{k.sLabel}}</span></div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{isPeople}}" hint-placeholder-val="{{false}}">
+<div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div><h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em">{{t.people}}</h1><div style="color:var(--ink2);margin-top:4px;max-width:640px;text-wrap:pretty">Голосовой профиль позволяет узнавать участника по тембру и сразу привязывать поручения к нему. Образцы хранятся на сервере в виде векторных отпечатков, исходное аудио удаляется.</div></div>
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto">
+    <div style="display:grid;min-width:820px;grid-template-columns:minmax(0,2fr) 90px 100px 110px 220px;gap:16px;padding:10px 18px;font-size:12px;color:var(--ink3);border-bottom:1px solid var(--line)"><div>Участник</div><div>Языки</div><div>Совещаний</div><div>Поручений</div><div>Голосовой профиль</div></div>
+    <sc-for list="{{people}}" as="p" hint-placeholder-count="6">
+      <div style="display:grid;min-width:820px;grid-template-columns:minmax(0,2fr) 90px 100px 110px 220px;gap:16px;padding:14px 18px;align-items:center;border-bottom:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:12px;min-width:0"><span style="width:34px;height:34px;border-radius:50%;background:{{p.color}};color:#fff;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{p.ini}}</span><div style="min-width:0"><div style="font-weight:500">{{p.name}}</div><div style="font-size:12px;color:var(--ink2)">{{p.pos}}</div></div></div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink2)">{{p.langs}}</div>
+        <div>{{p.meetings}}</div>
+        <div>{{p.open}}</div>
+        <div>
+          <sc-if value="{{p.ready}}" hint-placeholder-val="{{true}}"><span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ok)"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Готов · точность {{p.acc}}%</span></sc-if>
+          <sc-if value="{{p.recording}}" hint-placeholder-val="{{false}}"><span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--accent)">{{pulseDot}}Запись образца… {{voiceLeft}} с</span></sc-if>
+          <sc-if value="{{p.missing}}" hint-placeholder-val="{{false}}"><button onClick="{{p.record}}" style="height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px;cursor:pointer" style-hover="background:var(--soft)">Записать образец · 20 с</button></sc-if>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isNotif}}" hint-placeholder-val="{{false}}">
+<div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap"><div><h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em">{{t.notif}}</h1><div style="color:var(--ink2);margin-top:4px">Напоминания о сроках и рассылки выдержек</div></div><button onClick="{{markRead}}" style="height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer">Отметить все прочитанными</button></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start">
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto">
+      <sc-for list="{{notifs}}" as="n" hint-placeholder-count="5">
+        <div onClick="{{n.onClick}}" style="display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line);cursor:pointer" style-hover="background:var(--soft)">
+          <span style="width:8px;height:8px;margin-top:6px;border-radius:50%;background:{{n.dot}}"></span>
+          <div style="display:flex;flex-direction:column;gap:3px;min-width:0"><div style="font-weight:{{n.fw}}">{{n.title}}</div><div style="font-size:13px;color:var(--ink2);text-wrap:pretty">{{n.text}}</div><div style="font-size:12px;color:var(--ink3)">{{n.channel}}</div></div>
+          <div style="font-size:12px;color:var(--ink3);white-space:nowrap">{{n.time}}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-weight:500">Правила напоминаний</div>
+        <sc-for list="{{rules}}" as="r" hint-placeholder-count="4">
+          <div onClick="{{r.onClick}}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer"><span style="font-size:13px;text-wrap:pretty">{{r.label}}</span><span style="width:34px;height:20px;border-radius:10px;background:{{r.bg}};display:flex;justify-content:{{r.jc}};padding:2px;flex-shrink:0;transition:background .2s"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span></div>
+        </sc-for>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-weight:500">Каналы</div>
+        <sc-for list="{{channels}}" as="r" hint-placeholder-count="4">
+          <div onClick="{{r.onClick}}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer"><span style="font-size:13px">{{r.label}}</span><span style="width:34px;height:20px;border-radius:10px;background:{{r.bg}};display:flex;justify-content:{{r.jc}};padding:2px;flex-shrink:0;transition:background .2s"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span></div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isSettings}}" hint-placeholder-val="{{false}}">
+<div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div><h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:-0.02em">{{t.settings}}</h1><div style="color:var(--ink2);margin-top:4px">Развёртывание, модели и защита данных</div></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px">
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:500">Контур развёртывания</div><span style="font-size:12px;padding:3px 9px;border-radius:10px;background:var(--okSoft);color:var(--ok);font-weight:500">On-premise</span></div>
+      <sc-for list="{{infra}}" as="r" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--line)"><span style="color:var(--ink2)">{{r.k}}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right">{{r.v}}</span></div></sc-for>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-weight:500">Локальные модели</div>
+      <sc-for list="{{models}}" as="r" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--line)"><div><div>{{r.k}}</div><div style="font-size:12px;color:var(--ink3)">{{r.d}}</div></div><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right">{{r.v}}</span></div></sc-for>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-weight:500">Приватность</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;opacity:0.7"><div><div style="font-size:13px">Внешние облачные API</div><div style="font-size:12px;color:var(--ink3)">Заблокированы политикой контура</div></div><span style="font-size:12px;color:var(--ink2)">Запрещено</span></div>
+      <sc-for list="{{privacy}}" as="r" hint-placeholder-count="3">
+        <div onClick="{{r.onClick}}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer"><div><div style="font-size:13px">{{r.label}}</div><div style="font-size:12px;color:var(--ink3)">{{r.d}}</div></div><span style="width:34px;height:20px;border-radius:10px;background:{{r.bg}};display:flex;justify-content:{{r.jc}};padding:2px;flex-shrink:0"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span></div>
+      </sc-for>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div style="font-size:13px">Срок хранения аудио</div><select defaultValue="90 дней" style="height:30px;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:0 8px"><option>30 дней</option><option>90 дней</option><option>1 год</option></select></div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-weight:500">Интеграции</div>
+      <sc-for list="{{integrations}}" as="r" hint-placeholder-count="4">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--line)"><div><div style="font-size:13px">{{r.k}}</div><div style="font-size:12px;color:var(--ink3)">{{r.d}}</div></div><button onClick="{{r.onClick}}" style="height:28px;padding:0 12px;border-radius:7px;border:1px solid var(--line);background:{{r.bg}};color:{{r.fg}};font-size:12px;cursor:pointer">{{r.btn}}</button></div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+</main>
+
+<sc-if value="{{hasTask}}" hint-placeholder-val="{{false}}">
+  <div onClick="{{closeTask}}" style="position:fixed;inset:0;background:var(--shade);z-index:20"></div>
+  <div style="position:fixed;top:0;right:0;bottom:0;width:480px;max-width:100%;background:var(--surface);border-left:1px solid var(--line);z-index:21;display:flex;flex-direction:column;animation:hin .25s ease">
+    <div style="padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--ink3);font-family:'IBM Plex Mono',monospace">ПОРУЧЕНИЕ № {{task.num}}</span><button onClick="{{closeTask}}" style="width:30px;height:30px;border-radius:8px;border:none;background:var(--soft);color:var(--ink);cursor:pointer">✕</button></div>
+    <div style="flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:6px;font-size:12px"><span style="padding:2px 8px;border-radius:4px;background:{{task.sBg}};color:{{task.sFg}};font-weight:500">{{task.sLabel}}</span><span style="padding:2px 8px;border-radius:4px;background:var(--soft);color:var(--ink2)">{{task.dir}}</span><span style="padding:2px 8px;border-radius:4px;background:{{task.prioBg}};color:{{task.prioFg}}">{{task.prio}} срочность</span></div>
+        <div style="font-size:20px;font-weight:600;letter-spacing:-0.01em;text-wrap:pretty">{{task.title}}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:120px 1fr;gap:12px 16px;font-size:14px">
+        <span style="color:var(--ink2)">Ответственный</span><span style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:50%;background:{{task.color}};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center">{{task.ini}}</span>{{task.ownerName}}</span>
+        <span style="color:var(--ink2)">Куратор</span><span>Нурланова Асель</span>
+        <span style="color:var(--ink2)">Срок</span><span>{{task.dueFmt}} 2026 · <span style="color:{{task.dueColor}}">{{task.dueLabel}}</span></span>
+        <span style="color:var(--ink2)">Источник</span><span>{{task.meeting}}</span>
+      </div>
+      <div style="padding:14px 16px;border-radius:10px;background:var(--soft);display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink3)"><span>Фрагмент стенограммы · {{task.t}}</span><span>AN · {{task.conf}}%</span></div>
+        <div style="font-size:14px;line-height:1.55;text-wrap:pretty">«{{task.quote}}»</div>
+        <sc-if value="{{task.inM1}}" hint-placeholder-val="{{true}}"><button onClick="{{openFragment}}" style="align-self:flex-start;border:none;background:none;padding:0;color:var(--ink);font-size:13px;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:3px">Открыть в протоколе</button></sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Статус</div>
+        <div style="display:flex;padding:3px;border-radius:9px;background:var(--soft);gap:2px">
+          <sc-for list="{{statusOpts}}" as="o" hint-placeholder-count="3"><button onClick="{{o.onClick}}" style="flex:1;height:32px;border:none;border-radius:7px;background:{{o.bg}};color:{{o.fg}};font-size:13px;font-weight:500;cursor:pointer">{{o.label}}</button></sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">История</div>
+        <sc-for list="{{task.history}}" as="h" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:12px;font-size:13px"><span style="width:7px;height:7px;margin-top:6px;border-radius:50%;background:var(--ink3)"></span><span style="text-wrap:pretty">{{h.x}}</span><span style="color:var(--ink3);white-space:nowrap">{{h.d}}</span></div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="padding:16px 22px;border-top:1px solid var(--line);display:flex;gap:8px">
+      <button onClick="{{remindNow}}" style="flex:1;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:500;cursor:pointer">Напомнить сейчас</button>
+      <button onClick="{{sendSed}}" style="flex:1;height:38px;border-radius:9px;border:none;background:var(--inv);color:var(--invInk);font-weight:500;cursor:pointer">Отправить в СЭД</button>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{isNew}}" hint-placeholder-val="{{false}}">
+  <div style="position:fixed;inset:0;background:var(--shade);z-index:30;display:flex;align-items:center;justify-content:center;padding:20px">
+    <div style="width:560px;max-width:100%;background:var(--surface);border-radius:16px;border:1px solid var(--line);display:flex;flex-direction:column;animation:hin .25s ease">
+      <div style="padding:20px 24px 0;display:flex;justify-content:space-between;align-items:center"><div style="font-size:18px;font-weight:600">{{t.newMeeting}}</div><button onClick="{{closeModal}}" style="width:30px;height:30px;border-radius:8px;border:none;background:var(--soft);color:var(--ink);cursor:pointer">✕</button></div>
+      <div style="padding:16px 24px 0"><div style="display:flex;padding:3px;border-radius:9px;background:var(--soft);gap:2px">
+        <sc-for list="{{newTabs}}" as="o" hint-placeholder-count="3"><button onClick="{{o.onClick}}" style="flex:1;height:32px;border:none;border-radius:7px;background:{{o.bg}};color:{{o.fg}};font-size:13px;font-weight:500;cursor:pointer">{{o.label}}</button></sc-for>
+      </div></div>
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)">Название совещания<input value="{{mtitle}}" onChange="{{onTitle}}" style="height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;outline:none"></label>
+        <sc-if value="{{tabBot}}" hint-placeholder-val="{{true}}">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)">Ссылка на Zoom, Teams или Google Meet<input value="{{link}}" onChange="{{onLink}}" style="height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;font-family:'IBM Plex Mono',monospace;outline:none"></label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <sc-for list="{{platforms}}" as="p" hint-placeholder-count="3"><span style="height:26px;padding:0 10px;border-radius:13px;border:1px solid {{p.border}};background:{{p.bg}};color:{{p.fg}};font-size:12px;display:flex;align-items:center">{{p.label}}</span></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{tabMic}}" hint-placeholder-val="{{false}}">
+          <div style="padding:18px;border-radius:10px;background:var(--soft);display:flex;align-items:center;gap:14px"><span style="width:40px;height:40px;border-radius:50%;background:var(--accent);flex-shrink:0"></span><div><div style="font-weight:500">Микрофон конференц-зала</div><div style="font-size:13px;color:var(--ink2)">Jabra Speak 750 · уровень сигнала в норме</div></div></div>
+        </sc-if>
+        <sc-if value="{{tabFile}}" hint-placeholder-val="{{false}}">
+          <sc-if value="{{noFile}}" hint-placeholder-val="{{true}}">
+            <div onClick="{{pickFile}}" style="height:150px;border-radius:12px;border:1.5px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;background:var(--bg)" style-hover="border-color:var(--ink3)">
+              <div style="font-weight:500">Перетащите аудио или видео</div><div style="font-size:13px;color:var(--ink2)">MP3, WAV, M4A, MP4 · до 4 ГБ</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{hasFile}}" hint-placeholder-val="{{false}}">
+            <div style="padding:14px 16px;border-radius:10px;border:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-family:'IBM Plex Mono',monospace">kollegiya_2026-09-12.mp4</span><span style="color:var(--ink2)">412 МБ · {{upload}}%</span></div>
+              <div style="height:4px;border-radius:2px;background:var(--soft)"><div style="height:4px;border-radius:2px;background:var(--inv);width:{{upload}}%;transition:width .5s"></div></div>
+            </div>
+          </sc-if>
+        </sc-if>
+        <div onClick="{{toggleNotify}}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;padding-top:4px"><div><div style="font-size:14px">Уведомить участников о записи</div><div style="font-size:12px;color:var(--ink3)">Сообщение в чат совещания на русском и казахском</div></div><span style="width:34px;height:20px;border-radius:10px;background:{{notifyBg}};display:flex;justify-content:{{notifyJc}};padding:2px;flex-shrink:0"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span></div>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <span style="font-size:12px;color:var(--ink3)">Распознавание: RU · KZ · смешанная речь</span>
+        <button onClick="{{startAction}}" style="height:40px;padding:0 18px;border-radius:9px;border:none;background:var(--accent);color:#fff;font-weight:500;cursor:pointer;opacity:{{startOpacity}}">{{startLabel}}</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{isExport}}" hint-placeholder-val="{{false}}">
+  <div style="position:fixed;inset:0;background:var(--shade);z-index:30;display:flex;align-items:center;justify-content:center;padding:20px">
+    <div style="width:760px;max-width:100%;background:var(--surface);border-radius:16px;border:1px solid var(--line);display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));overflow:hidden;max-height:92vh;overflow-y:auto;animation:hin .25s ease">
+      <div style="padding:22px 24px;display:flex;flex-direction:column;gap:18px">
+        <div style="font-size:18px;font-weight:600">Экспорт протокола</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <sc-for list="{{fmts}}" as="f" hint-placeholder-count="2">
+            <button onClick="{{f.onClick}}" style="padding:14px;border-radius:10px;border:1.5px solid {{f.border}};background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;font-family:'IBM Plex Mono',monospace">{{f.label}}</span><span style="font-size:12px;color:var(--ink2)">{{f.d}}</span></button>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Разделы</div>
+          <sc-for list="{{sections}}" as="s" hint-placeholder-count="5">
+            <div onClick="{{s.onClick}}" style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px"><span style="width:18px;height:18px;border-radius:5px;border:1.5px solid {{s.border}};background:{{s.bg}};color:var(--invInk);font-size:11px;display:flex;align-items:center;justify-content:center">{{s.mark}}</span>{{s.label}}</div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button onClick="{{closeModal}}" style="height:40px;padding:0 16px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer">Отмена</button>
+          <button onClick="{{doExport}}" style="flex:1;height:40px;border-radius:9px;border:none;background:var(--inv);color:var(--invInk);font-weight:500;cursor:pointer">Скачать {{exportName}}</button>
+        </div>
+      </div>
+      <div style="background:var(--soft);padding:22px;display:flex;align-items:center;justify-content:center">
+        <div style="width:100%;aspect-ratio:1/1.414;background:#fff;color:#222;border-radius:4px;box-shadow:0 4px 18px oklch(0.2 0.01 250 / 0.12);padding:18px 16px;display:flex;flex-direction:column;gap:7px;font-size:7px;line-height:1.4">
+          <div style="font-weight:600;font-size:9px;text-align:center">ПРОТОКОЛ № 47</div>
+          <div style="text-align:center;color:#666">Планёрка по цифровизации документооборота · 23.09.2026</div>
+          <div style="height:1px;background:#ddd;margin:3px 0"></div>
+          <div style="font-weight:600">1. Краткое содержание</div>
+          <div style="height:4px;background:#e8e8e8;border-radius:1px"></div><div style="height:4px;background:#e8e8e8;border-radius:1px;width:88%"></div><div style="height:4px;background:#e8e8e8;border-radius:1px;width:70%"></div>
+          <div style="font-weight:600;margin-top:4px">2. Поручения</div>
+          <div style="display:grid;grid-template-columns:1fr 3fr 1.3fr 1fr;gap:2px;font-size:6px"><span style="background:#eee;padding:2px">№</span><span style="background:#eee;padding:2px">Суть</span><span style="background:#eee;padding:2px">Отв.</span><span style="background:#eee;padding:2px">Срок</span><span style="padding:2px">1</span><span style="padding:2px">Миграция архива</span><span style="padding:2px">Сапаров</span><span style="padding:2px">07.10</span><span style="padding:2px">2</span><span style="padding:2px">Обоснование бюджета</span><span style="padding:2px">Ахметова</span><span style="padding:2px">26.09</span><span style="padding:2px">3</span><span style="padding:2px">Договор с поставщиком</span><span style="padding:2px">Жаксылыков</span><span style="padding:2px">03.10</span></div>
+          <div style="font-weight:600;margin-top:4px">3. Стенограмма</div>
+          <div style="height:4px;background:#e8e8e8;border-radius:1px"></div><div style="height:4px;background:#e8e8e8;border-radius:1px;width:92%"></div><div style="height:4px;background:#e8e8e8;border-radius:1px;width:80%"></div><div style="height:4px;background:#e8e8e8;border-radius:1px;width:86%"></div>
+          <div style="margin-top:auto;display:flex;justify-content:space-between;color:#666"><span>Председатель ____ А. Нурланова</span><span>Секретарь ____ А. Касымова</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+  <div style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:40;padding:12px 18px;border-radius:10px;background:var(--inv);color:var(--invInk);font-size:14px;box-shadow:0 8px 24px oklch(0.2 0.01 250 / 0.2);animation:hin .25s ease">{{toast}}</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;lang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ru&quot;,&quot;kk&quot;,&quot;en&quot;],&quot;default&quot;:&quot;ru&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;secretary&quot;,&quot;head&quot;,&quot;executor&quot;],&quot;default&quot;:&quot;secretary&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const MONTHS=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+const TODAY=new Date(2026,8,23);
+const P={
+ AN:{name:'Асель Нурланова',pos:'Заместитель председателя',hue:255,langs:'RU · KZ',meetings:42,acc:97},
+ ES:{name:'Ержан Сапаров',pos:'Директор ИТ-департамента',hue:160,langs:'KZ · RU',meetings:31,acc:95},
+ DA:{name:'Динара Ахметова',pos:'Финансовый департамент',hue:70,langs:'RU',meetings:28,acc:96},
+ TZ:{name:'Тимур Жаксылыков',pos:'Юридический отдел',hue:310,langs:'RU',meetings:19},
+ MI:{name:'Марат Искаков',pos:'Управление персоналом',hue:20,langs:'KZ',meetings:15},
+ AK:{name:'Айгерим Касымова',pos:'Секретарь',hue:205,langs:'RU · KZ',meetings:57,acc:98}
+};
+const col=k=>`oklch(0.6 0.12 ${P[k].hue})`;
+const ini=k=>P[k].name.split(' ').map(w=>w[0]).join('');
+const short=k=>{const [f,l]=P[k].name.split(' ');return `${l} ${f[0]}.`;};
+const SEGS=[
+ {t:'00:00:12',s:'AN',l:'RU',x:'Коллеги, доброе утро. Начинаем. Напоминаю, что ведётся запись и автоматическая транскрибация.'},
+ {t:'00:00:31',s:'AN',l:'KZ',x:'Бүгін үш мәселе қарастырамыз: СЭД-ке көшу, бюджет және қызметкерлерді оқыту.'},
+ {t:'00:01:05',s:'ES',l:'RU+KZ',x:'Пилот по СЭД дайын, бірақ миграция архива әлі аяқталған жоқ. Нужно ещё примерно две недели.'},
+ {t:'00:01:48',s:'AN',l:'RU',x:'Ержан Болатович, завершите миграцию архива до седьмого октября и доложите на совещании.',task:'t1'},
+ {t:'00:02:10',s:'ES',l:'KZ',x:'Жақсы, жетінші қазанға дейін бітіремін.'},
+ {t:'00:03:02',s:'DA',l:'RU',x:'По бюджету: на лицензии заложено восемнадцать миллионов, фактически нужно двадцать один.'},
+ {t:'00:03:40',s:'AN',l:'RU+KZ',x:'Динара Серікқызы, дайындаңыз обоснование на дополнительные три миллиона, до пятницы.',task:'t2'},
+ {t:'00:04:15',s:'TZ',l:'RU',x:'Договор с поставщиком ещё не согласован, есть замечания по пункту о персональных данных.'},
+ {t:'00:04:52',s:'AN',l:'RU',x:'Тимур, согласуйте договор с учётом замечаний до третьего октября.',task:'t3'},
+ {t:'00:06:20',s:'MI',l:'KZ',x:'Қызметкерлерді оқыту кестесі дайын, барлығы жүз жиырма адам.'},
+ {t:'00:06:58',s:'AN',l:'RU+KZ',x:'Марат, кестені всем руководителям жіберіңіз до конца недели.',task:'t4'},
+ {t:'00:08:30',s:'AK',l:'RU',x:'Следующее совещание предлагаю провести тридцатого сентября в десять утра.'},
+ {t:'00:09:02',s:'AN',l:'RU',x:'Согласна. Айгерим, разошлите протокол и приглашения сегодня.',task:'t5'}
+];
+const H=(x,d)=>({x,d});
+const TASKS0=[
+ {id:'t1',num:'47-1',title:'Завершить миграцию архива в СЭД и доложить',owner:'ES',due:'2026-10-07',status:'work',dir:'Цифровизация',prio:'high',m:'m1',conf:96},
+ {id:'t2',num:'47-2',title:'Подготовить обоснование на дополнительные 3 млн ₸ для лицензий',owner:'DA',due:'2026-09-26',status:'work',dir:'Финансы',prio:'high',m:'m1',conf:91},
+ {id:'t3',num:'47-3',title:'Согласовать договор с поставщиком СЭД с учётом замечаний',owner:'TZ',due:'2026-10-03',status:'work',dir:'Юридическое',prio:'mid',m:'m1',conf:94},
+ {id:'t4',num:'47-4',title:'Разослать график обучения всем руководителям',owner:'MI',due:'2026-09-27',status:'work',dir:'Кадры',prio:'mid',m:'m1',conf:88},
+ {id:'t5',num:'47-5',title:'Разослать протокол и приглашения на 30 сентября',owner:'AK',due:'2026-09-23',status:'done',dir:'Организационное',prio:'low',m:'m1',conf:97},
+ {id:'t6',num:'44-2',title:'Предоставить отчёт по закупкам за III квартал',owner:'DA',due:'2026-09-19',status:'work',dir:'Финансы',prio:'high',m:'m3',conf:93,t:'00:21:14',quote:'Динара, отчёт по закупкам за третий квартал нужен до девятнадцатого.'},
+ {id:'t7',num:'44-5',title:'Обновить регламент доступа к персональным данным',owner:'TZ',due:'2026-09-20',status:'work',dir:'Юридическое',prio:'mid',m:'m3',conf:90,t:'00:48:02',quote:'Регламент по персональным данным обновите до двадцатого, Тимур.'},
+ {id:'t8',num:'41-1',title:'Настроить резервное копирование серверов СЭД',owner:'ES',due:'2026-09-15',status:'done',dir:'Цифровизация',prio:'high',m:'m5',conf:95,t:'00:05:40',quote:'Ержан, резервное копирование серверлерді он бесінші күнге дейін бітіріңіз.'},
+ {id:'t9',num:'41-3',title:'Провести аудит учётных записей пользователей',owner:'ES',due:'2026-09-30',status:'work',dir:'Цифровизация',prio:'low',m:'m5',conf:89,t:'00:19:33',quote:'Аудит учётных записей — до конца месяца.'},
+ {id:'t11',num:'45-1',title:'Утвердить график опрессовки тепловых сетей',owner:'ES',due:'2026-09-25',status:'work',dir:'Инфраструктура',prio:'high',m:'m4',conf:94,t:'00:07:12',quote:'Ержан, опрессовка кестесін бекітіңіз до двадцать пятого.'},
+ {id:'t12',num:'45-3',title:'Согласовать закупку резервных насосов',owner:'DA',due:'2026-09-24',status:'work',dir:'Финансы',prio:'high',m:'m4',conf:92,t:'00:15:40',quote:'Закупку резервных насосов согласуйте до двадцать четвёртого.'},
+ {id:'t13',num:'45-4',title:'Подготовить план эвакуации для котельных',owner:'MI',due:'2026-09-29',status:'work',dir:'Инфраструктура',prio:'mid',m:'m4',conf:87,t:'00:22:05',quote:'Марат, қазандықтар үшін эвакуация жоспарын дайындаңыз, до двадцать девятого.'},
+ {id:'t14',num:'43-1',title:'Обновить должностные инструкции ИТ-отдела',owner:'MI',due:'2026-09-12',status:'done',dir:'Кадры',prio:'low',m:'m6',conf:95,t:'00:12:30',quote:'Должностные инструкции обновите до двенадцатого.'},
+ {id:'t15',num:'44-1',title:'Сформировать проект бюджета на 2027 год',owner:'DA',due:'2026-09-18',status:'done',dir:'Финансы',prio:'high',m:'m3',conf:97,t:'00:04:10',quote:'Проект бюджета на двадцать седьмой год — к восемнадцатому.'},
+ {id:'t16',num:'45-6',title:'Проверить готовность аварийных бригад',owner:'ES',due:'2026-10-02',status:'work',dir:'Инфраструктура',prio:'mid',m:'m4',conf:90,t:'00:31:50',quote:'Апаттық бригадалардың дайындығын тексеріңіз до второго октября.'},
+ {id:'t17',num:'44-6',title:'Подготовить заключение по договору аренды',owner:'TZ',due:'2026-10-01',status:'work',dir:'Юридическое',prio:'low',m:'m3',conf:89,t:'00:55:20',quote:'Тимур, по договору аренды заключение до первого октября.'},
+ {id:'t10',num:'43-2',title:'Подготовить кадровый резерв на 2027 год',owner:'MI',due:'2026-10-15',status:'work',dir:'Кадры',prio:'low',m:'m6',conf:92,t:'00:31:10',quote:'Марат, кадровый резерв на следующий год дайындаңыз, до пятнадцатого октября.'}
+];
+SEGS.forEach(s=>{if(s.task){const k=TASKS0.find(x=>x.id===s.task);k.t=s.t;k.quote=s.x;}});
+const MEETINGS=[
+ {id:'m1',title:'Планёрка по цифровизации документооборота',date:'23 сентября',dateS:'23 сен',dur:'47:12',source:'Zoom · бот',people:['AN','ES','DA','TZ','MI','AK'],langs:'RU KZ MIX',tasks:5,status:'done'},
+ {id:'m2',title:'Коллегия управления',date:'22 сентября',dateS:'22 сен',dur:'2:05:10',source:'Файл MP4',people:['AN','ES','DA','AK'],langs:'KZ RU',tasks:0,status:'proc'},
+ {id:'m3',title:'Совещание по бюджету 2027',date:'16 сентября',dateS:'16 сен',dur:'1:12:40',source:'Google Meet · бот',people:['AN','DA','TZ','AK'],langs:'RU',tasks:7,status:'done'},
+ {id:'m4',title:'Штаб по отопительному сезону',date:'12 сентября',dateS:'12 сен',dur:'38:44',source:'Микрофон зала',people:['AN','ES','MI','AK','DA'],langs:'KZ MIX',tasks:6,status:'review'},
+ {id:'m5',title:'Оперативное совещание ИТ',date:'9 сентября',dateS:'9 сен',dur:'32:05',source:'Teams · бот',people:['ES','AK'],langs:'MIX',tasks:3,status:'done'},
+ {id:'m6',title:'Кадровый комитет',date:'5 сентября',dateS:'5 сен',dur:'55:30',source:'Teams · бот',people:['AN','MI','TZ','AK'],langs:'RU',tasks:4,status:'done'}
+];
+const I18N={
+ ru:{meetings:'Совещания',tasks:'Поручения',myTasks:'Мои поручения',people:'Участники',notif:'Уведомления',settings:'Настройки',newMeeting:'Новое совещание'},
+ kk:{meetings:'Кеңестер',tasks:'Тапсырмалар',myTasks:'Менің тапсырмаларым',people:'Қатысушылар',notif:'Хабарламалар',settings:'Баптаулар',newMeeting:'Жаңа кеңес'},
+ en:{meetings:'Meetings',tasks:'Action items',myTasks:'My action items',people:'Participants',notif:'Notifications',settings:'Settings',newMeeting:'New meeting'}
+};
+const ROLES={secretary:{k:'AK',label:'Секретарь'},head:{k:'AN',label:'Руководитель'},executor:{k:'ES',label:'Исполнитель'}};
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+const plural=n=>{const a=n%10,b=n%100;if(a===1&&b!==11)return 'день';if(a>=2&&a<=4&&(b<12||b>14))return 'дня';return 'дней';};
+const PRIO={high:['Высокая','var(--accentSoft)','var(--accent)'],mid:['Средняя','var(--warnSoft)','var(--warn)'],low:['Низкая','var(--soft)','var(--ink2)']};
+const tog=on=>({bg:on?'var(--ink)':'var(--line)',jc:on?'flex-end':'flex-start'});
+const secToStr=s=>{const m=Math.floor(s/60),x=s%60;return `${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`;};
+
+class Component extends DCLogic {
+  state={screen:'meetings',meetingId:'m1',tab:'summary',modal:null,newTab:'bot',link:'https://zoom.us/j/84512093311',mtitle:'Штаб по отопительному сезону',notify:true,upload:0,uploading:false,proc:0,live:false,paused:false,sec:0,idx:0,platform:'Zoom',liveTitle:'',taskId:null,taskView:'dash',tf:{dir:'all',owner:'all',prio:'all',due:'all',m:'all'},tq:'',tasks:TASKS0.map(t=>({...t,confirmed:t.id==='t5'})),toast:null,fmt:'pdf',secs:{summary:true,tasks:true,transcript:true,people:true,sign:true},q:'',mf:'all',hl:null,theme:null,lang:null,role:null,voiceRec:null,voiceLeft:0,voice:{},rules:{d3:true,d0:true,daily:true,esc:false},ch:{email:true,tg:true,sed:false,push:true},read:false,priv:{enc:true,anon:true,log:true},integ:{sed:false},playing:false,play:8};
+  trRef=React.createRef();
+  componentDidMount(){this.iv=setInterval(()=>this.tick(),1000);}
+  componentWillUnmount(){clearInterval(this.iv);clearTimeout(this.tt);}
+  componentDidUpdate(pp,ps){if(ps.idx!==this.state.idx&&this.trRef.current){const el=this.trRef.current;el.scrollTop=el.scrollHeight;}}
+  tick(){const s=this.state,u={};
+    if(s.live&&!s.paused){u.sec=s.sec+1;if(u.sec%2===0&&s.idx<SEGS.length)u.idx=s.idx+1;}
+    if(s.screen==='processing'){u.proc=s.proc+1;if(u.proc>5){u.screen='protocol';u.meetingId='m1';u.tab='summary';u.proc=0;}}
+    if(s.uploading){u.upload=Math.min(100,s.upload+25);if(u.upload===100)u.uploading=false;}
+    if(s.voiceRec){u.voiceLeft=s.voiceLeft-1;if(u.voiceLeft<=0){u.voice={...s.voice,[s.voiceRec]:true};u.voiceRec=null;this.toast('Голосовой профиль сохранён');}}
+    if(s.playing)u.play=Math.min(100,s.play+0.5);
+    if(Object.keys(u).length)this.setState(u);}
+  toast(msg){this.setState({toast:msg});clearTimeout(this.tt);this.tt=setTimeout(()=>this.setState({toast:null}),2600);}
+  go(screen){this.setState({screen,taskId:null});}
+  decorate(t){
+    const d=parse(t.due),diff=Math.round((d-TODAY)/864e5),done=t.status==='done',over=!done&&diff<0;
+    const key=done?'done':over?'overdue':'work';
+    let dueLabel=done?'Выполнено':diff<0?`просрочено на ${-diff} ${plural(-diff)}`:diff===0?'сегодня':diff===1?'завтра':`через ${diff} ${plural(diff)}`;
+    const dueColor=done?'var(--ok)':over?'var(--accent)':diff<=3?'var(--warn)':'var(--ink2)';
+    const S={work:['В работе','var(--soft)','var(--ink)'],overdue:['Просрочено','var(--accentSoft)','var(--accent)'],done:['Выполнено','var(--okSoft)','var(--ok)']}[key];
+    const pr=PRIO[t.prio],m=MEETINGS.find(x=>x.id===t.m);
+    return {...t,key,dueLabel,dueColor,dueFmt:`${d.getDate()} ${MONTHS[d.getMonth()]}`,sLabel:S[0],sBg:S[1],sFg:S[2],prioKey:t.prio,prio:pr[0],prioBg:pr[1],prioFg:pr[2],color:col(t.owner),ini:ini(t.owner),ownerShort:short(t.owner),ownerName:P[t.owner].name,meeting:`${m.title}, ${m.dateS}`,inM1:t.m==='m1',unconfirmed:!t.confirmed,confirmed:!!t.confirmed,
+      onClick:()=>this.setState({taskId:t.id}),confirm:()=>this.setState(s=>({tasks:s.tasks.map(x=>x.id===t.id?{...x,confirmed:true}:x)}))};
+  }
+  segView(s,i){const k=s.task&&TASKS0.find(x=>x.id===s.task);const d=k&&parse(k.due);
+    return {...s,name:P[s.s].name,color:col(s.s),hasTask:!!k,taskHint:k?`${short(k.owner)} · до ${d.getDate()} ${MONTHS[d.getMonth()]}`:'',bg:this.state.hl===s.task&&k?'var(--warnSoft)':'transparent',
+      seek:()=>this.setState({play:Math.round(i/SEGS.length*20)}),openTask:()=>this.setState({taskId:s.task})};}
+  renderVals(){
+    const s=this.state,theme=s.theme??this.props.theme??'light',lang=s.lang??this.props.lang??'ru',role=s.role??this.props.role??'secretary';
+    const t=I18N[lang],me=ROLES[role];
+    const tasks=s.tasks.map(x=>this.decorate(x));
+    const scoped=role==='executor'?tasks.filter(x=>x.owner==='ES'):tasks;
+    const overdue=scoped.filter(x=>x.key==='overdue').length;
+    const unread=s.read?0:3;
+    const navScreen=['live','processing','protocol'].includes(s.screen)?'meetings':s.screen;
+    const nav=[['meetings',t.meetings],['tasks',role==='executor'?t.myTasks:t.tasks,overdue],['people',t.people],['notif',t.notif,unread],['settings',t.settings]].map(([k,label,badge])=>{const a=navScreen===k;return {label,bg:a?'var(--soft)':'transparent',fg:a?'var(--ink)':'var(--ink2)',fw:a?500:400,hasBadge:!!badge,badge,badgeBg:k==='tasks'?'var(--accent)':'var(--inv)',badgeFg:k==='tasks'?'#fff':'var(--invInk)',onClick:()=>this.go(k)};});
+    const langs=[['ru','RU'],['kk','KZ'],['en','EN']].map(([k,label])=>({label,bg:lang===k?'var(--surface)':'transparent',fg:lang===k?'var(--ink)':'var(--ink3)',onClick:()=>this.setState({lang:k})}));
+    const pulseDot=React.createElement('span',{style:{width:10,height:10,borderRadius:'50%',background:'var(--accent)',flexShrink:0,animation:s.paused?'none':'hpulse 1.4s infinite',display:'inline-block'}});
+    const wave=React.createElement('div',{style:{display:'flex',alignItems:'center',gap:3,height:32}},Array.from({length:18},(_,i)=>React.createElement('span',{key:i,style:{width:3,height:32,borderRadius:2,background:'var(--accent)',opacity:0.8,transformOrigin:'center',transform:'scaleY(.25)',animation:s.paused?'none':`hwave ${0.7+(i*37%9)/10}s ${(i*13%7)/10}s infinite ease-in-out`}})));
+    // meetings
+    const mfilters=[['all','Все'],['tasks','С поручениями'],['review','Требуют проверки']].map(([k,label])=>{const a=s.mf===k;return {label,border:a?'var(--ink)':'var(--line)',bg:a?'var(--inv)':'var(--surface)',fg:a?'var(--invInk)':'var(--ink2)',onClick:()=>this.setState({mf:k})};});
+    const ST={done:['Обработано','var(--okSoft)','var(--ok)'],proc:['Обработка 64%','var(--soft)','var(--ink2)'],review:['На проверке','var(--warnSoft)','var(--warn)']};
+    const q=s.q.trim().toLowerCase();
+    const meetings=MEETINGS.filter(m=>(s.mf==='all'||(s.mf==='tasks'&&m.tasks>0)||(s.mf==='review'&&m.status==='review'))&&(!q||m.title.toLowerCase().includes(q)||m.people.some(p=>P[p].name.toLowerCase().includes(q)))).map(m=>({...m,date:m.dateS,tasks:m.tasks||'—',status:ST[m.status][0],sBg:ST[m.status][1],sFg:ST[m.status][2],av:m.people.slice(0,4).map(p=>({ini:ini(p),color:col(p)})),hasMore:m.people.length>4,more:m.people.length-4,
+      onClick:()=>m.status==='proc'?this.toast('Запись ещё обрабатывается'):this.setState({screen:'protocol',meetingId:m.id,tab:'summary',hl:null})}));
+    // live
+    const shown=SEGS.slice(0,s.idx);
+    const liveSegs=shown.map((x,i)=>this.segView(x,i));
+    const liveTasks=shown.filter(x=>x.task).map(x=>this.decorate(s.tasks.find(k=>k.id===x.task)));
+    const cnt={};shown.forEach(x=>cnt[x.s]=(cnt[x.s]||0)+x.x.length);const tot=Object.values(cnt).reduce((a,b)=>a+b,0)||1;
+    const liveSpeakers=Object.keys(cnt).map(k=>({name:P[k].name,color:col(k),pct:Math.round(cnt[k]/tot*100)})).sort((a,b)=>b.pct-a.pct);
+    const allCnt={};SEGS.forEach(x=>allCnt[x.s]=(allCnt[x.s]||0)+x.x.length);const allTot=Object.values(allCnt).reduce((a,b)=>a+b,0);
+    const speakers=Object.keys(allCnt).map(k=>({short:short(k),color:col(k),pct:Math.round(allCnt[k]/allTot*100)})).sort((a,b)=>b.pct-a.pct);
+    const stepsL=['Сохранение аудио на локальном сервере','Распознавание речи: RU · KZ · смешанная','Диаризация: определено 6 говорящих','Выделение поручений, ответственных и сроков','Формирование саммари и протокола'];
+    const procSteps=stepsL.map((label,i)=>{const done=i<s.proc,cur=i===s.proc;return {label,mark:done?'✓':cur?'•':'',bg:done?'var(--inv)':'transparent',fg:done?'var(--invInk)':'var(--accent)',border:done?'var(--inv)':cur?'var(--accent)':'var(--line)',text:done||cur?'var(--ink)':'var(--ink3)'};});
+    // protocol
+    const meeting=MEETINGS.find(m=>m.id===s.meetingId);
+    const mtasks=tasks.filter(x=>x.m==='m1');
+    const allConf=mtasks.every(x=>x.confirmed);
+    const ptabs=[['summary','Саммари'],['transcript','Транскрипт']].map(([k,label])=>({label,border:s.tab===k?'var(--ink)':'transparent',fg:s.tab===k?'var(--ink)':'var(--ink3)',onClick:()=>this.setState({tab:k})}));
+    const topics=[['Переход на СЭД','00:00'],['Бюджет на лицензии','03:02'],['Договор с поставщиком','04:15'],['Обучение сотрудников','06:20'],['Организационные вопросы','08:30']].map(([label,tt])=>({label,t:tt,onClick:()=>this.setState({tab:'transcript'})}));
+    // tasks
+    const tf=s.tf,opts=a=>a.map(([v,l])=>({v,l}));
+    const DIRS=['Цифровизация','Финансы','Юридическое','Кадры','Инфраструктура','Организационное'];
+    const fsel=[
+      {key:'dir',label:'Направление',options:opts([['all','Все'],...DIRS.map(d=>[d,d])])},
+      {key:'owner',label:'Ответственный',options:opts([['all','Все'],...Object.keys(P).map(k=>[k,short(k)])])},
+      {key:'prio',label:'Срочность',options:opts([['all','Любая'],['high','Высокая'],['mid','Средняя'],['low','Низкая']])},
+      {key:'due',label:'Срок',options:opts([['all','Любой'],['overdue','Просрочены'],['week','Ближайшие 7 дней'],['month','До конца октября'],['done','Выполненные']])},
+      {key:'m',label:'Совещание',options:opts([['all','Все'],...MEETINGS.filter(m=>m.tasks).map(m=>[m.id,m.title])])}
+    ].map(f=>({...f,rk:f.key+'-'+tf[f.key],options:f.options.map(o=>({...o,sel:o.v===tf[f.key]})),value:tf[f.key],border:tf[f.key]==='all'?'var(--line)':'var(--ink)',onChange:e=>{const v=e.target.value;this.setState(st=>({tf:{...st.tf,[f.key]:v}}));}}));
+    const tq=s.tq.trim().toLowerCase(),dd=x=>(parse(x.due)-TODAY)/864e5;
+    const filtered=scoped.filter(x=>(tf.dir==='all'||x.dir===tf.dir)&&(tf.owner==='all'||x.owner===tf.owner)&&(tf.prio==='all'||x.prioKey===tf.prio)&&(tf.m==='all'||x.m===tf.m)&&(!tq||x.title.toLowerCase().includes(tq)||x.ownerShort.toLowerCase().includes(tq))
+      &&(tf.due==='all'||(tf.due==='overdue'&&x.key==='overdue')||(tf.due==='done'&&x.key==='done')||(tf.due==='week'&&x.key==='work'&&dd(x)<=7)||(tf.due==='month'&&x.key!=='done'&&parse(x.due)<=new Date(2026,9,31))));
+    const activeN=Object.values(tf).filter(v=>v!=='all').length+(tq?1:0);
+    const cntK=k=>filtered.filter(x=>x.key===k).length,workN=cntK('work'),overN=cntK('overdue'),doneN=cntK('done'),totN=filtered.length||1;
+    const disc=doneN+overN?Math.round(doneN/(doneN+overN)*100):100;
+    const statusBar=[['В работе',workN,'var(--ink3)'],['Просрочено',overN,'var(--accent)'],['Выполнено',doneN,'var(--ok)']].map(([label,n,color])=>({label,n,color,pct:n/totN*100}));
+    const WD=['вс','пн','вт','ср','чт','пт','сб'],PC={high:'var(--accent)',mid:'var(--warn)',low:'var(--ink3)'};
+    const days=Array.from({length:14},(_,i)=>{const d=new Date(2026,8,23+i);return {n:d.getDate(),wd:WD[d.getDay()],fw:i===0?600:400,fg:i===0?'var(--accent)':'var(--ink)',bg:i===0?'var(--soft)':'transparent',items:filtered.filter(x=>x.key==='work'&&+parse(x.due)===+d).map(x=>({title:`${x.title} · ${x.ownerShort}`,bg:PC[x.prioKey],onClick:x.onClick}))};});
+    const owners=Object.keys(P).map(k=>({k,my:filtered.filter(x=>x.owner===k)})).filter(o=>o.my.length);
+    const maxO=Math.max(1,...owners.map(o=>o.my.length));
+    const load=owners.map(({k,my})=>{const c=key=>my.filter(x=>x.key===key).length;return {name:short(k),ini:ini(k),color:col(k),total:my.length,w:my.length/maxO*100,over:c('overdue'),overColor:c('overdue')?'var(--accent)':'var(--ink3)',segs:[['work','var(--ink3)'],['overdue','var(--accent)'],['done','var(--ok)']].map(([key,color])=>({n:c(key),color})).filter(g=>g.n),onClick:()=>this.setState(st=>({tf:{...st.tf,owner:k}}))};}).sort((a,b)=>b.total-a.total);
+    const dAll=DIRS.map(d=>({label:d,my:filtered.filter(x=>x.dir===d)})).filter(r=>r.my.length),maxD=Math.max(1,...dAll.map(r=>r.my.length));
+    const dirStats=dAll.map(r=>({label:r.label,total:r.my.length,open:r.my.filter(x=>x.key!=='done').length,w:r.my.length/maxD*100,onClick:()=>this.setState(st=>({tf:{...st.tf,dir:r.label}}))})).sort((a,b)=>b.total-a.total);
+    const overdueList=filtered.filter(x=>x.key==='overdue').map(x=>({...x,remind:e=>{e.stopPropagation();this.toast(`Напоминание отправлено: ${x.ownerShort}`);}}));
+    const order={overdue:0,work:1,done:2};
+    const flatTasks=[...filtered].sort((a,b)=>order[a.key]-order[b.key]||parse(a.due)-parse(b.due));
+    const columns=[['work','В работе','var(--ink3)'],['overdue','Просрочено','var(--accent)'],['done','Выполнено','var(--ok)']].map(([k,title,color])=>({title,color,items:flatTasks.filter(x=>x.key===k),count:flatTasks.filter(x=>x.key===k).length}));
+    const week=filtered.filter(x=>x.key==='work'&&dd(x)<=7).length;
+    const stats=[[workN,'В работе','var(--ink)'],[overN,'Просрочено','var(--accent)'],[week,'Срок в ближайшие 7 дней','var(--warn)'],[doneN,'Выполнено','var(--ok)']].map(([n,label,color])=>({n,label,color}));
+    const views=[['dash','Дашборд'],['board','Доска'],['list','Список']].map(([k,label])=>({label,bg:s.taskView===k?'var(--surface)':'transparent',fg:s.taskView===k?'var(--ink)':'var(--ink3)',onClick:()=>this.setState({taskView:k})}));
+    // task drawer
+    const tk=s.taskId&&tasks.find(x=>x.id===s.taskId);
+    let task=null,statusOpts=[];
+    if(tk){const d=parse(tk.due);const created=tk.m==='m1'?'23 сен':MEETINGS.find(m=>m.id===tk.m).dateS;
+      const hist=[H(`Создано ИИ из протокола, уверенность ${tk.conf}%`,created),H(tk.confirmed?'Подтверждено секретарём':'Ожидает подтверждения секретаря',created),H('Выдержка из протокола отправлена ответственному',created)];
+      if(tk.key==='overdue'){hist.push(H('Напоминание: срок через 3 дня',`${d.getDate()-3} ${MONTHS[d.getMonth()]}`));hist.push(H('Срок просрочен, уведомлён куратор',`${d.getDate()+1} ${MONTHS[d.getMonth()]}`));}
+      if(tk.key==='done')hist.push(H('Отмечено как выполненное','23 сен'));
+      task={...tk,history:hist};
+      statusOpts=[['work','В работе'],['done','Выполнено']].map(([k,label])=>{const a=tk.status===k;return {label,bg:a?'var(--surface)':'transparent',fg:a?'var(--ink)':'var(--ink3)',onClick:()=>this.setState(st=>({tasks:st.tasks.map(x=>x.id===tk.id?{...x,status:k}:x)}))};});
+    }
+    // people
+    const people=Object.keys(P).map(k=>{const has=P[k].acc||s.voice[k];return {...P[k],ini:ini(k),color:col(k),open:tasks.filter(x=>x.owner===k&&x.key!=='done').length,acc:P[k].acc||93,ready:!!has,recording:s.voiceRec===k,missing:!has&&s.voiceRec!==k,record:()=>this.setState({voiceRec:k,voiceLeft:5})};});
+    // notifications
+    const N=[
+      {title:'Просрочено: отчёт по закупкам за III квартал',text:'Ахметова Д. · срок был 19 сентября. Куратор уведомлён.',time:'09:00',channel:'Email · Telegram',type:'over',task:'t6'},
+      {title:'Просрочено: регламент доступа к персональным данным',text:'Жаксылыков Т. · срок был 20 сентября.',time:'09:00',channel:'Email · Push',type:'over',task:'t7'},
+      {title:'Срок через 3 дня: обоснование бюджета на лицензии',text:'Ахметова Д. · до 26 сентября.',time:'08:30',channel:'Telegram',type:'soon',task:'t2'},
+      {title:'Выдержки из протокола разосланы',text:'Планёрка по цифровизации документооборота · 5 ответственных получили свои поручения.',time:'10:52',channel:'Email',type:'info'},
+      {title:'Протокол сформирован',text:'Совещание по бюджету 2027 · 7 поручений, 2 ожидают подтверждения.',time:'16 сен',channel:'Push',type:'info'}
+    ];
+    const notifs=N.map((n,i)=>({...n,dot:n.type==='over'?'var(--accent)':n.type==='soon'?'var(--warn)':'var(--ink3)',fw:!s.read&&i<3?500:400,onClick:()=>n.task?this.setState({taskId:n.task}):this.setState({screen:'protocol',meetingId:'m1',tab:'summary'})}));
+    const rules=[['d3','За 3 дня до срока'],['d0','В день срока'],['daily','Ежедневно при просрочке'],['esc','Эскалация куратору через 2 дня просрочки']].map(([k,label])=>({label,...tog(s.rules[k]),onClick:()=>this.setState(st=>({rules:{...st.rules,[k]:!st.rules[k]}}))}));
+    const channels=[['email','Email'],['tg','Telegram-бот'],['push','Push в приложении'],['sed','Задача в СЭД']].map(([k,label])=>({label,...tog(s.ch[k]),onClick:()=>this.setState(st=>({ch:{...st.ch,[k]:!st.ch[k]}}))}));
+    // settings
+    const infra=[{k:'Сервер приложений',v:'hattama-app-01 · онлайн'},{k:'GPU-узел распознавания',v:'2 × NVIDIA L40S'},{k:'Хранилище',v:'1,8 из 4 ТБ'},{k:'Версия',v:'0.9.2 · 22.09.2026'}];
+    const models=[{k:'Распознавание речи',d:'Дообучена на казахской и смешанной речи',v:'Whisper large-v3 kk-ru'},{k:'Диаризация',d:'Разделение и идентификация говорящих',v:'pyannote 3.1'},{k:'Извлечение поручений и саммари',d:'Локальная LLM, агент с проверкой сроков',v:'Qwen2.5-14B-Instruct'},{k:'Голосовые отпечатки',d:'Идентификация по тембру',v:'ECAPA-TDNN'}];
+    const privacy=[['enc','Шифрование хранилища','AES-256, ключи в HSM заказчика'],['anon','Анонимизация для демо','Замена ФИО и сумм в экспорте'],['log','Журнал доступа','Кто открывал протоколы и аудио']].map(([k,label,d])=>({label,d,...tog(s.priv[k]),onClick:()=>this.setState(st=>({priv:{...st.priv,[k]:!st.priv[k]}}))}));
+    const integrations=[{k:'Zoom',d:'Бот-участник подключён'},{k:'Microsoft Teams',d:'Бот-участник подключён'},{k:'Google Meet',d:'Бот-участник подключён'},{k:'СЭД',d:s.integ.sed?'Поручения выгружаются автоматически':'Выгрузка поручений как задач',sed:true}].map(r=>{const on=r.sed?s.integ.sed:true;return {...r,btn:on?'Подключено':'Подключить',bg:on?'var(--soft)':'var(--inv)',fg:on?'var(--ink2)':'var(--invInk)',onClick:()=>r.sed?this.setState(st=>({integ:{sed:!st.integ.sed}})):this.toast('Настройки интеграции')};});
+    // new meeting modal
+    const L=s.link.toLowerCase(),det=L.includes('zoom')?'Zoom':L.includes('teams')?'Teams':L.includes('meet.google')?'Google Meet':null;
+    const platforms=['Zoom','Teams','Google Meet'].map(label=>({label,border:det===label?'var(--ink)':'var(--line)',bg:det===label?'var(--inv)':'transparent',fg:det===label?'var(--invInk)':'var(--ink3)'}));
+    const newTabs=[['bot','Бот в конференцию'],['mic','Запись в зале'],['file','Загрузить файл']].map(([k,label])=>({label,bg:s.newTab===k?'var(--surface)':'transparent',fg:s.newTab===k?'var(--ink)':'var(--ink3)',onClick:()=>this.setState({newTab:k})}));
+    const startLive=(platform)=>{if(this.state.notify)this.toast('Участники уведомлены о записи');this.setState({modal:null,screen:'live',live:true,paused:false,sec:0,idx:0,platform,liveTitle:s.mtitle||'Совещание'});};
+    const fileReady=s.upload===100;
+    let startLabel,startAction,startOpacity=1;
+    if(s.newTab==='bot'){startLabel='Подключить бота';startOpacity=det?1:0.4;startAction=()=>det&&startLive(det);}
+    else if(s.newTab==='mic'){startLabel='Начать запись';startAction=()=>startLive('Зал');}
+    else {startLabel=fileReady?'Обработать запись':'Выберите файл';startOpacity=fileReady?1:0.4;startAction=()=>fileReady&&this.setState({modal:null,screen:'processing',proc:0,liveTitle:s.mtitle||'Коллегия управления',upload:0});}
+    // export
+    const fmts=[['pdf','PDF','Для печати и подписи'],['docx','DOCX','Для редактирования']].map(([k,label,d])=>({label,d,border:s.fmt===k?'var(--ink)':'var(--line)',onClick:()=>this.setState({fmt:k})}));
+    const sections=[['summary','Краткое содержание и решения'],['tasks','Таблица поручений'],['transcript','Полная стенограмма с таймкодами'],['people','Список участников'],['sign','Поля для подписей']].map(([k,label])=>{const on=s.secs[k];return {label,mark:on?'✓':'',bg:on?'var(--inv)':'transparent',border:on?'var(--inv)':'var(--line)',onClick:()=>this.setState(st=>({secs:{...st.secs,[k]:!st.secs[k]}}))};});
+    return {
+      theme,t,nav,langs,me:{name:P[me.k].name,ini:ini(me.k),color:col(me.k)},roleLabel:me.label,canRecord:role!=='executor',
+      toggleTheme:()=>this.setState({theme:theme==='dark'?'light':'dark'}),
+      cycleRole:()=>{const r=Object.keys(ROLES);this.setState({role:r[(r.indexOf(role)+1)%3]});},
+      openNew:()=>this.setState({modal:'new',upload:0,uploading:false}),closeModal:()=>this.setState({modal:null}),
+      isMeetings:s.screen==='meetings',isLive:s.screen==='live',isProcessing:s.screen==='processing',isProtocol:s.screen==='protocol',isTasks:s.screen==='tasks',isPeople:s.screen==='people',isNotif:s.screen==='notif',isSettings:s.screen==='settings',
+      goMeetings:()=>this.go('meetings'),goLive:()=>this.go('live'),
+      pulseDot,wave,timer:secToStr(s.sec),platform:s.platform,liveTitle:s.liveTitle,showLiveMini:s.live&&s.screen!=='live',showLiveBanner:s.live&&s.screen==='meetings',
+      liveState:s.paused?'Пауза':`${Object.keys(cnt).length||0} говорящих · запись идёт`,pauseLabel:s.paused?'Продолжить':'Пауза',
+      togglePause:()=>this.setState({paused:!s.paused}),stopLive:()=>this.setState({live:false,screen:'processing',proc:0}),
+      liveSegs,liveTasks,liveTaskCount:liveTasks.length,mtaskCount:mtasks.length,noLiveTasks:liveTasks.length===0,liveSpeakers,listening:!s.paused,trRef:this.trRef,
+      procSteps,procPct:Math.min(100,s.proc*20),
+      q:s.q,onQ:e=>this.setState({q:e.target.value}),mfilters,meetings,
+      meeting,ptabs,isSummary:s.tab==='summary',isTranscript:s.tab==='transcript',topics,speakers,segs:SEGS.map((x,i)=>this.segView(x,i)),mtasks,
+      confirmAllLabel:allConf?'Все подтверждены':'Подтвердить все',confirmAll:()=>this.setState(st=>({tasks:st.tasks.map(x=>x.m==='m1'?{...x,confirmed:true}:x)})),
+      togglePlay:()=>this.setState({playing:!s.playing}),playIcon:s.playing?'❚❚':'▶',playPct:s.play,playTime:secToStr(Math.round(s.play/100*2832)),
+      sendExtracts:()=>this.toast('Выдержки отправлены 5 ответственным'),openExport:()=>this.setState({modal:'export'}),
+      tasksTitle:role==='executor'?t.myTasks:t.tasks,views,isBoard:s.taskView==='board',isList:s.taskView==='list',stats,columns,flatTasks,isDash:s.taskView==='dash',fsel,tq:s.tq,onTq:e=>this.setState({tq:e.target.value}),hasFilters:activeN>0,activeN,resetFilters:()=>this.setState({tq:'',tf:{dir:'all',owner:'all',prio:'all',due:'all',m:'all'}}),disc,statusBar,days,load,dirStats,overdueList,overN,noOverdue:overN===0,
+      hasTask:!!task,task:task||{history:[]},statusOpts,closeTask:()=>this.setState({taskId:null}),
+      openFragment:()=>this.setState({screen:'protocol',meetingId:'m1',tab:'transcript',hl:s.taskId,taskId:null}),
+      remindNow:()=>this.toast(`Напоминание отправлено: ${task?task.ownerShort:''}`),sendSed:()=>this.toast('Поручение зарегистрировано в СЭД'),
+      people,voiceLeft:s.voiceLeft,
+      notifs,rules,channels,markRead:()=>this.setState({read:true}),
+      infra,models,privacy,integrations,
+      isNew:s.modal==='new',newTabs,tabBot:s.newTab==='bot',tabMic:s.newTab==='mic',tabFile:s.newTab==='file',
+      mtitle:s.mtitle,onTitle:e=>this.setState({mtitle:e.target.value}),link:s.link,onLink:e=>this.setState({link:e.target.value}),platforms,
+      noFile:!s.uploading&&s.upload===0,hasFile:s.uploading||s.upload>0,upload:s.upload,pickFile:()=>this.setState({uploading:true,upload:0,mtitle:'Коллегия управления'}),
+      notifyBg:tog(s.notify).bg,notifyJc:tog(s.notify).jc,toggleNotify:()=>this.setState({notify:!s.notify}),
+      startLabel,startAction,startOpacity,
+      isExport:s.modal==='export',fmts,sections,exportName:`protocol_47.${s.fmt}`,doExport:()=>{this.setState({modal:null});this.toast(`Файл protocol_47.${s.fmt} сохранён`);},
+      hasToast:!!s.toast,toast:s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

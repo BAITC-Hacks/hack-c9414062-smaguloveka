@@ -1,0 +1,12 @@
+{
+  "name": "AI Hatshy — секретарь совещаний",
+  "short_name": "AI Hatshy",
+  "start_url": "/m",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fbfbfc",
+  "theme_color": "#fbfbfc",
+  "lang": "ru",
+  "icons": [{"src": "/static/mobile/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
+}

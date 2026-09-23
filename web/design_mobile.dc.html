@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0}*{box-sizing:border-box}
+:root,[data-theme="light"]{--bg:oklch(0.985 0.002 250);--surface:#fff;--soft:oklch(0.965 0.003 250);--line:oklch(0.92 0.004 250);--ink:oklch(0.23 0.006 250);--ink2:oklch(0.47 0.006 250);--ink3:oklch(0.62 0.006 250);--accent:oklch(0.61 0.21 27);--accentSoft:oklch(0.955 0.025 27);--ok:oklch(0.56 0.12 155);--okSoft:oklch(0.955 0.03 155);--warn:oklch(0.6 0.13 70);--warnSoft:oklch(0.96 0.035 80);--inv:oklch(0.23 0.006 250);--invInk:#fff;--desk:oklch(0.93 0.003 250)}
+[data-theme="dark"]{--bg:oklch(0.165 0.004 250);--surface:oklch(0.2 0.005 250);--soft:oklch(0.245 0.005 250);--line:oklch(0.3 0.006 250);--ink:oklch(0.95 0.003 250);--ink2:oklch(0.75 0.005 250);--ink3:oklch(0.6 0.006 250);--accent:oklch(0.67 0.19 27);--accentSoft:oklch(0.29 0.06 27);--ok:oklch(0.74 0.12 155);--okSoft:oklch(0.29 0.045 155);--warn:oklch(0.8 0.12 75);--warnSoft:oklch(0.31 0.045 75);--inv:oklch(0.95 0.003 250);--invInk:oklch(0.17 0.004 250);--desk:oklch(0.11 0.003 250)}
+a{color:var(--ink);text-decoration:none}a:hover{color:var(--accent)}
+button,input{font-family:inherit}
+@keyframes hpulse{0%{box-shadow:0 0 0 0 oklch(0.61 0.21 27 / 0.55)}100%{box-shadow:0 0 0 10px oklch(0.61 0.21 27 / 0)}}
+@keyframes hwave{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+@keyframes hin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="min-height:100vh;background:var(--desk);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px 16px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)">
+<div style="width:390px;height:844px;border-radius:48px;background:var(--bg);border:10px solid oklch(0.2 0.005 250);overflow:hidden;position:relative;display:flex;flex-direction:column;font-size:15px;line-height:1.45;box-shadow:0 20px 60px oklch(0.2 0.01 250 / 0.2)">
+  <div style="height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:14px;font-weight:600"><span>9:41</span><span style="width:110px;height:28px;border-radius:14px;background:oklch(0.2 0.005 250)"></span><span style="font-size:12px">100%</span></div>
+
+  <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+
+  <sc-if value="{{isHome}}" hint-placeholder-val="{{true}}">
+    <div style="padding:12px 20px 24px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:24px;height:24px;border-radius:7px;background:var(--inv);display:flex;align-items:center;justify-content:center"><div style="width:7px;height:7px;border-radius:50%;background:var(--accent)"></div></div><span style="font-weight:600">AI Hatshy</span></div>
+        <button onClick="{{toggleTheme}}" style="width:36px;height:36px;border-radius:50%;border:none;background:var(--inv);color:var(--invInk);font-size:12px;font-weight:500">АН</button>
+      </div>
+      <div><div style="font-size:26px;font-weight:600;letter-spacing:-0.02em">Добрый день, Асель</div><div style="color:var(--ink2)">Среда, 23 сентября</div></div>
+      <sc-if value="{{live}}" hint-placeholder-val="{{false}}">
+        <button onClick="{{goLive}}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;border:none;background:var(--accentSoft);color:var(--ink);text-align:left">{{pulseDot}}<span style="flex:1;font-weight:500">Идёт запись</span><span style="font-family:'IBM Plex Mono',monospace">{{timer}}</span></button>
+      </sc-if>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <sc-for list="{{stats}}" as="st" hint-placeholder-count="3"><button onClick="{{goTasks}}" style="padding:14px 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;display:flex;flex-direction:column;gap:2px"><span style="font-size:24px;font-weight:600;color:{{st.color}}">{{st.n}}</span><span style="font-size:12px;color:var(--ink2)">{{st.label}}</span></button></sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:13px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Требуют внимания</div>
+        <sc-for list="{{urgent}}" as="k" hint-placeholder-count="3">
+          <button onClick="{{k.onClick}}" style="padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;display:flex;flex-direction:column;gap:6px"><span style="font-weight:500;text-wrap:pretty">{{k.title}}</span><span style="display:flex;justify-content:space-between;width:100%;font-size:13px"><span style="color:var(--ink2)">{{k.owner}}</span><span style="color:{{k.dueColor}}">{{k.dueLabel}}</span></span></button>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:13px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em">Последние совещания</div>
+        <sc-for list="{{meetings}}" as="m" hint-placeholder-count="3">
+          <div style="padding:12px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px"><div><div style="font-weight:500">{{m.title}}</div><div style="font-size:13px;color:var(--ink2)">{{m.meta}}</div></div><span style="font-size:13px;color:var(--ink3);white-space:nowrap">{{m.tasks}}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isLive}}" hint-placeholder-val="{{false}}">
+    <div style="padding:12px 20px 24px;display:flex;flex-direction:column;gap:16px;flex:1">
+      <button onClick="{{goHome}}" style="align-self:flex-start;border:none;background:none;padding:0;color:var(--ink2);font-size:14px">← Назад</button>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 0">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2)">{{pulseDot}}Штаб по отопительному сезону</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:48px;font-weight:500">{{timer}}</div>
+        {{wave}}
+        <div style="font-size:12px;color:var(--ink3);text-align:center">Участники уведомлены о записи · обработка локальная</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{liveSegs}}" as="s" hint-placeholder-count="2">
+          <div style="padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:4px;animation:hin .4s ease">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="width:8px;height:8px;border-radius:50%;background:{{s.color}}"></span><span style="font-weight:500">{{s.name}}</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--ink3)">{{s.l}}</span></div>
+            <div style="font-size:14px;text-wrap:pretty">{{s.x}}</div>
+            <sc-if value="{{s.hasTask}}" hint-placeholder-val="{{false}}"><div style="align-self:flex-start;padding:3px 8px;border-radius:6px;background:var(--warnSoft);font-size:12px">Поручение · {{s.taskHint}}</div></sc-if>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onClick="{{togglePause}}" style="flex:1;height:52px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:500;font-size:15px">{{pauseLabel}}</button>
+        <button onClick="{{stopLive}}" style="flex:1.4;height:52px;border-radius:14px;border:none;background:var(--accent);color:#fff;font-weight:500;font-size:15px">Завершить</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isTasks}}" hint-placeholder-val="{{false}}">
+    <div style="padding:12px 20px 24px;display:flex;flex-direction:column;gap:16px">
+      <div style="font-size:26px;font-weight:600;letter-spacing:-0.02em">Поручения</div>
+      <div style="display:flex;padding:3px;border-radius:12px;background:var(--soft);gap:2px">
+        <sc-for list="{{filters}}" as="f" hint-placeholder-count="3"><button onClick="{{f.onClick}}" style="flex:1;height:36px;border:none;border-radius:9px;background:{{f.bg}};color:{{f.fg}};font-size:13px;font-weight:500">{{f.label}}</button></sc-for>
+      </div>
+      <sc-for list="{{tasks}}" as="k" hint-placeholder-count="4">
+        <button onClick="{{k.onClick}}" style="padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;display:flex;flex-direction:column;gap:8px">
+          <span style="font-weight:500;text-wrap:pretty">{{k.title}}</span>
+          <span style="display:flex;justify-content:space-between;width:100%;font-size:13px;align-items:center"><span style="display:flex;align-items:center;gap:6px;color:var(--ink2)"><span style="width:22px;height:22px;border-radius:50%;background:{{k.color}};color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center">{{k.ini}}</span>{{k.owner}}</span><span style="color:{{k.dueColor}}">{{k.dueLabel}}</span></span>
+        </button>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isTask}}" hint-placeholder-val="{{false}}">
+    <div style="padding:12px 20px 24px;display:flex;flex-direction:column;gap:18px">
+      <button onClick="{{goTasks}}" style="align-self:flex-start;border:none;background:none;padding:0;color:var(--ink2);font-size:14px">← Поручения</button>
+      <div style="display:flex;gap:6px;font-size:12px"><span style="padding:3px 8px;border-radius:5px;background:{{task.sBg}};color:{{task.sFg}};font-weight:500">{{task.sLabel}}</span><span style="padding:3px 8px;border-radius:5px;background:var(--soft);color:var(--ink2)">{{task.dir}}</span></div>
+      <div style="font-size:22px;font-weight:600;letter-spacing:-0.01em;text-wrap:pretty">{{task.title}}</div>
+      <div style="display:flex;flex-direction:column;border-top:1px solid var(--line)">
+        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)"><span style="color:var(--ink2)">Ответственный</span><span>{{task.owner}}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)"><span style="color:var(--ink2)">Срок</span><span>{{task.dueFmt}} · <span style="color:{{task.dueColor}}">{{task.dueLabel}}</span></span></div>
+        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)"><span style="color:var(--ink2)">Куратор</span><span>Нурланова А.</span></div>
+      </div>
+      <div style="padding:14px 16px;border-radius:14px;background:var(--soft);display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;color:var(--ink3);font-family:'IBM Plex Mono',monospace">{{task.t}} · {{task.meeting}}</span><span style="text-wrap:pretty">«{{task.quote}}»</span></div>
+      <button onClick="{{toggleDone}}" style="height:52px;border-radius:14px;border:none;background:var(--inv);color:var(--invInk);font-weight:500;font-size:15px">{{doneLabel}}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isNotif}}" hint-placeholder-val="{{false}}">
+    <div style="padding:12px 20px 24px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:26px;font-weight:600;letter-spacing:-0.02em;margin-bottom:10px">Уведомления</div>
+      <sc-for list="{{notifs}}" as="n" hint-placeholder-count="4">
+        <button onClick="{{n.onClick}}" style="display:grid;grid-template-columns:10px minmax(0,1fr);gap:12px;padding:14px 0;border:none;border-bottom:1px solid var(--line);background:none;color:var(--ink);text-align:left"><span style="width:8px;height:8px;margin-top:7px;border-radius:50%;background:{{n.dot}}"></span><span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:500;text-wrap:pretty">{{n.title}}</span><span style="font-size:13px;color:var(--ink2)">{{n.text}}</span><span style="font-size:12px;color:var(--ink3)">{{n.time}}</span></span></button>
+      </sc-for>
+    </div>
+  </sc-if>
+  </div>
+
+  <sc-if value="{{showTabs}}" hint-placeholder-val="{{true}}">
+  <div style="height:84px;flex-shrink:0;border-top:1px solid var(--line);background:var(--surface);display:grid;grid-template-columns:1fr 1fr 76px 1fr 1fr;align-items:start;padding:8px 8px 0">
+    <button onClick="{{goHome}}" style="height:48px;border:none;background:none;font-size:12px;font-weight:500;color:{{homeFg}}">Главная</button>
+    <button onClick="{{goTasks}}" style="height:48px;border:none;background:none;font-size:12px;font-weight:500;color:{{tasksFg}}">Поручения</button>
+    <button onClick="{{startLive}}" style="width:60px;height:60px;margin:-18px auto 0;border-radius:50%;border:5px solid var(--surface);background:var(--accent);display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border-radius:50%;background:#fff"></span></button>
+    <button onClick="{{goNotif}}" style="height:48px;border:none;background:none;font-size:12px;font-weight:500;color:{{notifFg}}">Уведомления</button>
+    <a href="AI Hatshy.dc.html" style="height:48px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--ink3)">Веб</a>
+  </div>
+  </sc-if>
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div style="position:absolute;left:20px;right:20px;bottom:100px;padding:12px 16px;border-radius:12px;background:var(--inv);color:var(--invInk);font-size:14px;animation:hin .25s ease">{{toast}}</div></sc-if>
+</div>
+<div style="font-size:12px;color:var(--ink3)">Нажмите на аватар, чтобы сменить тему</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;}}">
+const MONTHS=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+const TODAY=new Date(2026,8,23);
+const P={AN:['Нурланова А.',255],ES:['Сапаров Е.',160],DA:['Ахметова Д.',70],TZ:['Жаксылыков Т.',310],MI:['Искаков М.',20],AK:['Касымова А.',205]};
+const col=k=>`oklch(0.6 0.12 ${P[k][1]})`;
+const ini=k=>{const [l,f]=P[k][0].split(' ');return f[0]+l[0];};
+const SEGS=[
+ {s:'AN',l:'RU',x:'Коллеги, начинаем. Бүгін жылу беру маусымына дайындықты қарастырамыз.'},
+ {s:'ES',l:'RU+KZ',x:'Котельные дайын, но по двум районам ещё идёт опрессовка.'},
+ {s:'AN',l:'RU',x:'Ержан, завершите опрессовку до 1 октября и доложите.',task:'Сапаров Е. · до 1 окт'},
+ {s:'DA',l:'RU',x:'Финансирование на ремонт сетей выделено полностью.'},
+ {s:'AN',l:'KZ',x:'Динара, есепті жұмаға дейін дайындаңыз.',task:'Ахметова Д. · до 25 сен'}
+];
+const TASKS0=[
+ {id:'t6',title:'Предоставить отчёт по закупкам за III квартал',owner:'DA',due:'2026-09-19',status:'work',dir:'Финансы',m:'Совещание по бюджету 2027',t:'00:21:14',quote:'Динара, отчёт по закупкам за третий квартал нужен до девятнадцатого.'},
+ {id:'t7',title:'Обновить регламент доступа к персональным данным',owner:'TZ',due:'2026-09-20',status:'work',dir:'Юридическое',m:'Совещание по бюджету 2027',t:'00:48:02',quote:'Регламент по персональным данным обновите до двадцатого, Тимур.'},
+ {id:'t2',title:'Подготовить обоснование на дополнительные 3 млн ₸ для лицензий',owner:'DA',due:'2026-09-26',status:'work',dir:'Финансы',m:'Планёрка по цифровизации',t:'00:03:40',quote:'Динара Серікқызы, дайындаңыз обоснование на дополнительные три миллиона, до пятницы.'},
+ {id:'t4',title:'Разослать график обучения всем руководителям',owner:'MI',due:'2026-09-27',status:'work',dir:'Кадры',m:'Планёрка по цифровизации',t:'00:06:58',quote:'Марат, кестені всем руководителям жіберіңіз до конца недели.'},
+ {id:'t3',title:'Согласовать договор с поставщиком СЭД',owner:'TZ',due:'2026-10-03',status:'work',dir:'Юридическое',m:'Планёрка по цифровизации',t:'00:04:52',quote:'Тимур, согласуйте договор с учётом замечаний до третьего октября.'},
+ {id:'t1',title:'Завершить миграцию архива в СЭД и доложить',owner:'ES',due:'2026-10-07',status:'work',dir:'Цифровизация',m:'Планёрка по цифровизации',t:'00:01:48',quote:'Ержан Болатович, завершите миграцию архива до седьмого октября и доложите на совещании.'},
+ {id:'t5',title:'Разослать протокол и приглашения на 30 сентября',owner:'AK',due:'2026-09-23',status:'done',dir:'Организационное',m:'Планёрка по цифровизации',t:'00:09:02',quote:'Айгерим, разошлите протокол и приглашения сегодня.'}
+];
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+const plural=n=>{const a=n%10,b=n%100;if(a===1&&b!==11)return 'день';if(a>=2&&a<=4&&(b<12||b>14))return 'дня';return 'дней';};
+const mmss=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+
+class Component extends DCLogic {
+  state={screen:'home',live:false,paused:false,sec:0,idx:0,tasks:TASKS0.map(t=>({...t})),taskId:null,f:'work',toast:null,theme:null};
+  componentDidMount(){this.iv=setInterval(()=>{const s=this.state;if(s.live&&!s.paused){const sec=s.sec+1;this.setState({sec,idx:sec%3===0?Math.min(SEGS.length,s.idx+1):s.idx});}},1000);}
+  componentWillUnmount(){clearInterval(this.iv);clearTimeout(this.tt);}
+  toast(m){this.setState({toast:m});clearTimeout(this.tt);this.tt=setTimeout(()=>this.setState({toast:null}),2400);}
+  dec(t){const d=parse(t.due),diff=Math.round((d-TODAY)/864e5),done=t.status==='done',over=!done&&diff<0;const key=done?'done':over?'overdue':'work';
+    const S={work:['В работе','var(--soft)','var(--ink)'],overdue:['Просрочено','var(--accentSoft)','var(--accent)'],done:['Выполнено','var(--okSoft)','var(--ok)']}[key];
+    return {...t,key,owner:P[t.owner][0],ini:ini(t.owner),color:col(t.owner),meeting:t.m,dueFmt:`${d.getDate()} ${MONTHS[d.getMonth()]}`,
+      dueLabel:done?'Выполнено':diff<0?`просрочено на ${-diff} ${plural(-diff)}`:diff===0?'сегодня':`через ${diff} ${plural(diff)}`,
+      dueColor:done?'var(--ok)':over?'var(--accent)':diff<=3?'var(--warn)':'var(--ink2)',sLabel:S[0],sBg:S[1],sFg:S[2],onClick:()=>this.setState({screen:'task',taskId:t.id})};}
+  renderVals(){
+    const s=this.state,theme=s.theme??this.props.theme??'light';
+    const tasks=s.tasks.map(t=>this.dec(t));
+    const cnt=k=>tasks.filter(t=>t.key===k).length;
+    const task=tasks.find(t=>t.id===s.taskId)||{};
+    const pulseDot=React.createElement('span',{style:{width:10,height:10,borderRadius:'50%',background:'var(--accent)',flexShrink:0,display:'inline-block',animation:s.paused?'none':'hpulse 1.4s infinite'}});
+    const wave=React.createElement('div',{style:{display:'flex',alignItems:'center',gap:4,height:40}},Array.from({length:22},(_,i)=>React.createElement('span',{key:i,style:{width:3,height:40,borderRadius:2,background:'var(--accent)',transform:'scaleY(.25)',animation:s.paused?'none':`hwave ${0.7+(i*37%9)/10}s ${(i*13%7)/10}s infinite ease-in-out`}})));
+    const tab=k=>s.screen===k||(k==='tasks'&&s.screen==='task')?'var(--ink)':'var(--ink3)';
+    const N=[{title:'Просрочено: отчёт по закупкам за III квартал',text:'Ахметова Д. · срок был 19 сентября',time:'09:00',type:'over',id:'t6'},{title:'Просрочено: регламент доступа к ПДн',text:'Жаксылыков Т. · срок был 20 сентября',time:'09:00',type:'over',id:'t7'},{title:'Срок через 3 дня: обоснование бюджета',text:'Ахметова Д. · до 26 сентября',time:'08:30',type:'soon',id:'t2'},{title:'Протокол сформирован',text:'Планёрка по цифровизации · 5 поручений',time:'10:52',type:'info',id:'t1'}];
+    return {
+      theme,toggleTheme:()=>this.setState({theme:theme==='dark'?'light':'dark'}),
+      isHome:s.screen==='home',isLive:s.screen==='live',isTasks:s.screen==='tasks',isTask:s.screen==='task',isNotif:s.screen==='notif',showTabs:s.screen!=='live',
+      homeFg:tab('home'),tasksFg:tab('tasks'),notifFg:tab('notif'),
+      goHome:()=>this.setState({screen:'home'}),goTasks:()=>this.setState({screen:'tasks'}),goNotif:()=>this.setState({screen:'notif'}),goLive:()=>this.setState({screen:'live'}),
+      startLive:()=>{if(!s.live){this.setState({live:true,paused:false,sec:0,idx:0,screen:'live'});this.toast('Участники уведомлены о записи');}else this.setState({screen:'live'});},
+      togglePause:()=>this.setState({paused:!s.paused}),pauseLabel:s.paused?'Продолжить':'Пауза',
+      stopLive:()=>{this.setState({live:false,screen:'home'});this.toast('Протокол формируется. Пришлём уведомление');},
+      live:s.live,timer:mmss(s.sec),pulseDot,wave,
+      liveSegs:SEGS.slice(0,s.idx).map(x=>({...x,name:P[x.s][0],color:col(x.s),hasTask:!!x.task,taskHint:x.task})).reverse(),
+      stats:[{n:cnt('overdue'),label:'Просрочено',color:'var(--accent)'},{n:cnt('work'),label:'В работе',color:'var(--ink)'},{n:cnt('done'),label:'Выполнено',color:'var(--ok)'}],
+      urgent:tasks.filter(t=>t.key==='overdue'||(t.key==='work'&&(parse(t.due)-TODAY)/864e5<=4)).slice(0,3),
+      meetings:[{title:'Планёрка по цифровизации',meta:'Сегодня, 10:00 · 47 мин · Zoom',tasks:'5 поруч.'},{title:'Совещание по бюджету 2027',meta:'16 сен · 1 ч 12 мин · Meet',tasks:'7 поруч.'},{title:'Оперативное совещание ИТ',meta:'9 сен · 32 мин · Teams',tasks:'3 поруч.'}],
+      filters:[['work','В работе'],['overdue','Просрочено'],['done','Выполнено']].map(([k,label])=>({label,bg:s.f===k?'var(--surface)':'transparent',fg:s.f===k?'var(--ink)':'var(--ink3)',onClick:()=>this.setState({f:k})})),
+      tasks:tasks.filter(t=>t.key===s.f),task,
+      doneLabel:task.status==='done'?'Вернуть в работу':'Отметить выполненным',
+      toggleDone:()=>{this.setState(st=>({tasks:st.tasks.map(x=>x.id===st.taskId?{...x,status:x.status==='done'?'work':'done'}:x)}));},
+      notifs:N.map(n=>({...n,dot:n.type==='over'?'var(--accent)':n.type==='soon'?'var(--warn)':'var(--ink3)',onClick:()=>this.setState({screen:'task',taskId:n.id})})),
+      hasToast:!!s.toast,toast:s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>
