@@ -11,7 +11,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from . import db, reminders, llm_settings, setup
+from . import db, reminders, llm_settings, setup, voice, integrations
 from .config import ROOT, UPLOADS, DATA
 from .pipeline import runner
 from .pipeline.text import fmt_t
@@ -27,6 +27,8 @@ PATRON_END = ("ич", "на", "ны", "улы", "ұлы", "қызы", "кызы"
 @app.on_event("startup")
 def _startup():
     db.init()
+    voice.init()
+    integrations.init()
     runner.start_worker()
 
 
@@ -129,6 +131,10 @@ def settings_obj():
         "channels": {**reminders.DEFAULT_CHANNELS, **(db.kv_get("channels", {}) or {})},
         "privacy": {"anon": False, **(db.kv_get("privacy", {}) or {})},
         "llm": llm,
+        "integrations": integrations.list_all(),
+        "mcp": {"cmd": f"claude mcp add ai-hatshy -- {ROOT / 'scripts' / 'mcp.sh'}",
+                "tools": ["list_meetings", "get_meeting", "list_tasks", "update_task", "remind_task",
+                          "search_transcripts", "upload_meeting", "get_processing_status", "export_protocol"]},
         "infra": [{"k": "Сервер приложений", "v": f"{platform.node()} · онлайн"},
                   {"k": "Вычислитель", "v": f"{platform.machine()} · CPU (ONNX) + Metal (Ollama)"},
                   {"k": "Хранилище данных", "v": f"{used:.0f} МБ · свободно {free:.1f} ГБ"},
@@ -188,6 +194,12 @@ def state():
                              "pos": "Подразделение" if t["owner_kind"] == "department" else "Не участвовал в совещании",
                              "langs": set(), "meetings": 0, "open": 0, "voice": False}
             people[k]["open"] += 1
+    vp = {v["key"]: v for v in voice.profiles()}
+    for k, p in people.items():
+        v = vp.get(voice.key_of(p["name"]))
+        p["voice"] = bool(v)
+        p["voice_info"] = {"id": v["id"], "seconds": v["seconds"], "source": v["source"]} if v else None
+        p["can_sample"] = p["meetings"] > 0
     for p in people.values():
         p["langs"] = " · ".join(sorted({x for l in p["langs"] for x in l.split(" · ")})) or "—"
     notifs = [notif_obj(n, today) for n in db.q("SELECT * FROM notifications ORDER BY created DESC, id DESC LIMIT 200")]
@@ -356,6 +368,65 @@ def confirm_all(mid: int):
     return {"ok": True}
 
 
+@app.post("/api/assistant")
+async def assistant_ask(request: Request):
+    from . import assistant
+    b = await request.json()
+    try:
+        return await asyncio.to_thread(assistant.ask, b.get("question", ""), b.get("meeting_id"), b.get("history") or [])
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(500, f"ИИ-помощник недоступен: {e}")
+
+
+@app.get("/api/integrations")
+def integ_list():
+    return integrations.list_all()
+
+
+@app.post("/api/integrations")
+async def integ_create(request: Request):
+    try:
+        return integrations.create(await request.json())
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.patch("/api/integrations/{iid}")
+async def integ_update(iid: int, request: Request):
+    try:
+        return integrations.update(iid, await request.json())
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except KeyError:
+        raise HTTPException(404, "Интеграция не найдена")
+
+
+@app.delete("/api/integrations/{iid}")
+def integ_delete(iid: int):
+    integrations.delete(iid)
+    return {"ok": True}
+
+
+@app.post("/api/integrations/test")
+async def integ_test(request: Request):
+    body = await request.json()
+    try:
+        return await asyncio.to_thread(integrations.send_test, body.pop("id", None), body)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.post("/api/tasks/{tid}/send")
+async def task_send(tid: int, request: Request):
+    body = await request.json()
+    try:
+        return await asyncio.to_thread(integrations.send_task, int(body["integration_id"]), tid)
+    except (KeyError, ValueError) as e:
+        raise HTTPException(400, f"Не удалось отправить: {e}")
+
+
 @app.post("/api/tasks/{tid}/remind")
 def remind(tid: int):
     nid = reminders.remind_now(tid)
@@ -440,6 +511,50 @@ async def setup_complete(request: Request):
     except Exception:
         body = {}
     return setup.complete(body.get("done", True))
+
+
+@app.get("/api/voices")
+def voices_list():
+    return [{k: v for k, v in p.items() if k != "embedding"} for p in voice.profiles()]
+
+
+@app.post("/api/voices/from_meeting")
+async def voices_from_meeting(request: Request):
+    body = await request.json()
+    try:
+        return await asyncio.to_thread(voice.from_meeting, body.get("name", ""), body.get("meeting_id"))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.post("/api/voices/from_range")
+async def voices_from_range(request: Request):
+    b = await request.json()
+    try:
+        return await asyncio.to_thread(voice.from_range, b.get("name", ""), int(b["meeting_id"]),
+                                       float(b["start"]), float(b["end"]))
+    except (ValueError, KeyError, TypeError) as e:
+        raise HTTPException(400, str(e))
+
+
+@app.post("/api/voices/record")
+async def voices_record(name: str = Form(...), file: UploadFile = File(...)):
+    import tempfile
+    with tempfile.NamedTemporaryFile(suffix=Path(file.filename or "a.webm").suffix or ".webm", delete=False) as f:
+        f.write(await file.read())
+        tmp = f.name
+    try:
+        return await asyncio.to_thread(voice.from_recording, name, tmp)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    finally:
+        os.remove(tmp)  # исходная запись образца не хранится — только вектор голоса
+
+
+@app.delete("/api/voices/{vid}")
+def voices_delete(vid: int):
+    db.execute("DELETE FROM voice_profiles WHERE id=?", (vid,))
+    return {"ok": True}
 
 
 @app.get("/api/llm")

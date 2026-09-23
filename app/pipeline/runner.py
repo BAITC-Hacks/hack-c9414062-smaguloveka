@@ -120,6 +120,11 @@ def process(mid: int):
 
         _progress(mid, 1, 12)
         hint = [p for p in (m.get("participants") or []) if p]
+        try:
+            from .. import voice
+            hint += [p["name"] for p in voice.profiles() if p["name"] not in hint]
+        except Exception:
+            traceback.print_exc()
         n = m.get("num_speakers") or (len(hint) if hint else -1)
         turns = diarize(audio, n if n and n > 0 else -1)
 
@@ -147,11 +152,18 @@ def process(mid: int):
             db.insert("speakers", meeting_id=mid, label=lab, name=None, hue=HUES[k % len(HUES)], pct=round(100 * share),
                       confidence=0)
         asr_s = time.time() - t0
+        voice_names = {}
+        try:  # узнавание участников по голосовым профилям
+            from .. import voice
+            voice_names = voice.match_speakers(audio, segs)
+        except Exception:
+            traceback.print_exc()
 
         _progress(mid, 3, 55)
         transcript = "\n".join(f"[{s['speaker']}] {s['text']}" for s in segs)
         extraction, metrics = _run_llm(transcript, m["date"])
         metrics["asr_diar_s"] = round(asr_s, 1)
+        metrics["voice"] = voice_names
 
         _progress(mid, 4, 92)
         db.update("meetings", mid, extraction=extraction)
@@ -164,6 +176,11 @@ def process(mid: int):
             traceback.print_exc()
         left = db.one("SELECT COUNT(*) n FROM tasks WHERE meeting_id=?", (mid,))["n"]
         db.update("meetings", mid, status="review" if left else "done", step=5, pct=100, step_label="Готово")
+    try:  # автоотправка поручений в интеграции с включённой опцией
+        from .. import integrations
+        integrations.auto_send_meeting(mid)
+    except Exception:
+        traceback.print_exc()
     try:
         from .. import reminders
         reminders.run()
@@ -184,7 +201,7 @@ def rebuild(mid: int):
 def _save_protocol(mid, m, segs, extraction, hint, metrics, t0):
     transcript = "\n".join(f"[{s['speaker']}] {s['text']}" for s in segs)
     if True:
-        speakers, tasks, summary = build(extraction, transcript, m["date"], hint)
+        speakers, tasks, summary = build(extraction, transcript, m["date"], hint, (metrics or {}).get("voice"))
         for lab, sp in speakers.items():
             db.execute("UPDATE speakers SET name=?, role=?, confidence=?, name_source=? WHERE meeting_id=? AND label=?",
                        (sp["name"], sp["role"], sp["confidence"], sp["source"], mid, lab))

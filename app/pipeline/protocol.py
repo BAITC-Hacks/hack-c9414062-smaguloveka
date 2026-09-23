@@ -41,7 +41,7 @@ def priority(due: str | None, meeting_date: str, llm_urgency: str | None) -> str
     return {"высокая": "high", "средняя": "mid"}.get(llm_urgency or "", "low")
 
 
-def build(extraction: dict, transcript: str, meeting_date: str, participants_hint: list[str]):
+def build(extraction: dict, transcript: str, meeting_date: str, participants_hint: list[str], voice_names: dict | None = None):
     """Возвращает (speaker_names{label: {name, role, source, confidence}}, tasks[list], summary{})."""
     heur, _ = map_speakers(transcript)
     llm_p = {}
@@ -50,11 +50,14 @@ def build(extraction: dict, transcript: str, meeting_date: str, participants_hin
         if str(nm).strip().lower() in ("null", "none", "", "-", "—", "неизвестно"):
             nm = None
         llm_p[p.get("speaker_label")] = {**p, "name": nm}
-    labels = sorted(set(heur) | set(llm_p))
+    labels = sorted(set(heur) | set(llm_p) | set(voice_names or {}))
     speakers = {}
     for lab in labels:
         h, l = heur.get(lab, {}), llm_p.get(lab, {})
-        if h.get("name"):
+        vn = (voice_names or {}).get(lab)
+        if vn:  # узнан по голосовому профилю — самый надёжный источник
+            name, src, conf = vn["name"], "голос", float(vn["sim"])
+        elif h.get("name"):
             name, src, conf = h["name"], "обращения", min(0.99, 0.6 + 0.1 * (h.get("score") or 0))
         elif l.get("name"):
             name, src, conf = l["name"], "LLM", float(l.get("confidence") or 0.6)
